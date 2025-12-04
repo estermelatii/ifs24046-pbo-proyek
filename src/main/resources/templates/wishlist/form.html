@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Tambah Wishlist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; }
+        .form-container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-container">
+        <h3 class="mb-4 text-center text-primary fw-bold">Tambah Item Baru</h3>
+        
+        <!-- Perhatikan enctype ini WAJIB untuk upload file -->
+        <form th:action="@{/wishlist/add}" th:object="${wishlistForm}" method="post" enctype="multipart/form-data">
+            
+            <div class="mb-3">
+                <label class="form-label">Nama Barang</label>
+                <input type="text" class="form-control" th:field="*{name}" placeholder="Misal: Laptop Gaming" required>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Estimasi Harga (Rp)</label>
+                    <input type="number" class="form-control" th:field="*{price}" placeholder="15000000">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Kategori</label>
+                    <select class="form-select" th:field="*{category}">
+                        <option value="Elektronik">Elektronik</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Hobi">Hobi</option>
+                        <option value="Kuliah">Kebutuhan Kuliah</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Target Tanggal Beli</label>
+                <input type="date" class="form-control" th:field="*{targetDate}">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Link Toko (Opsional)</label>
+                <input type="url" class="form-control" th:field="*{shopUrl}" placeholder="https://shopee.co.id/...">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Deskripsi / Catatan</label>
+                <textarea class="form-control" th:field="*{description}" rows="3"></textarea>
+            </div>
+
+            <!-- Input Gambar -->
+            <div class="mb-4">
+                <label class="form-label">Foto Barang (Opsional)</label>
+                <input type="file" class="form-control" th:field="*{imageFile}" accept="image/*">
+                <div class="form-text">Format: JPG, PNG. Maks 2MB.</div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary py-2">Simpan Wishlist</button>
+                <a href="/wishlist" class="btn btn-light text-muted">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

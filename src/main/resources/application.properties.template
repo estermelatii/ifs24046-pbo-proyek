@@ -1,58 +1,35 @@
-spring.application.name=Aplikasi UI SpringBoot
+# Application Name
+spring.application.name=Wishlist Tracker
 
-# Datasource
-spring.datasource.url=jdbc:postgresql://localhost:5432/db_pbo_app
+# Server Configuration
+server.port=8080
+
+# Database Configuration (PostgreSQL example - sesuaikan dengan base code)
+spring.datasource.url=jdbc:postgresql://localhost:5432/db_pbo_proyek
 spring.datasource.username=postgres
-spring.datasource.password=postgres
+spring.datasource.password=estermelati06
 spring.datasource.driver-class-name=org.postgresql.Driver
 
-# JPA / Hibernate
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
-spring.jpa.show-sql=false
-spring.jpa.properties.hibernate.format_sql=false
+# JPA/Hibernate Configuration
 spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=true
 
-# File upload configuration
-spring.servlet.multipart.max-file-size=5MB
-spring.servlet.multipart.max-request-size=5MB
+# File Upload Configuration
 spring.servlet.multipart.enabled=true
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
 
-# Upload directory - DEFINE THIS PROPERTY
-app.upload.dir=./uploads
+# Static Resources
+spring.web.resources.static-locations=classpath:/static/,file:uploads/
 
-# HikariCP (connection pool)
-spring.datasource.hikari.maximum-pool-size=10
-spring.datasource.hikari.minimum-idle=3
-spring.datasource.hikari.idle-timeout=60000
-spring.datasource.hikari.max-lifetime=1800000
-spring.datasource.hikari.connection-timeout=30000
-
-# DevTools Configuration
-spring.devtools.restart.enabled=true
-spring.devtools.livereload.enabled=true
-spring.devtools.restart.exclude=static/**,public/**
-spring.devtools.restart.additional-exclude=templates/**
-
-# Thymeleaf Cache (disable untuk development)
+# Thymeleaf Configuration
 spring.thymeleaf.cache=false
-
-# Template reloading
 spring.thymeleaf.prefix=classpath:/templates/
 spring.thymeleaf.suffix=.html
-spring.thymeleaf.mode=HTML
-spring.thymeleaf.encoding=UTF-8
-spring.thymeleaf.servlet.content-type=text/html
-
-# Static resources cache (disable untuk development)
-spring.web.resources.cache.period=0
-spring.web.resources.chain.cache=false
 
 # Logging
-spring.main.banner-mode=off
-logging.level.root=INFO
-logging.level.org.springframework=INFO
-logging.level.org.hibernate=ERROR
-logging.level.org.delcom=INFO
-
-# ANSI Color (opsional)
-spring.output.ansi.enabled=ALWAYS
+logging.level.com.pbo.wishlist=DEBUG
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE

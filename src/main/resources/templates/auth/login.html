@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Masuk - Wishlist Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f6; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .login-card { width: 100%; max-width: 400px; padding: 30px; border-radius: 15px; background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <h3 class="text-center text-primary fw-bold mb-4">Wishlist Tracker</h3>
+
+    <!-- Pesan Error -->
+    <div th:if="${param.error}" class="alert alert-danger text-center small">
+        Email atau Kata Sandi salah!
+    </div>
+    
+    <!-- Pesan Logout -->
+    <div th:if="${param.logout}" class="alert alert-success text-center small">
+        Anda telah logout.
+    </div>
+
+    <!-- PENTING: Action ke /login, Method POST -->
+    <form th:action="@{/login}" method="post">
+        
+        <div class="mb-3">
+            <label class="form-label text-muted small">Email</label>
+            <!-- PENTING: name="username" -->
+            <input type="text" name="username" class="form-control bg-light" placeholder="email@contoh.com" required autofocus>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-muted small">Kata Sandi</label>
+            <!-- PENTING: name="password" -->
+            <input type="password" name="password" class="form-control bg-light" placeholder="••••••••••" required>
+        </div>
+
+        <div class="d-grid mt-4">
+            <button type="submit" class="btn btn-primary py-2 fw-bold">Masuk</button>
+        </div>
+
+    </form>
+
+    <div class="text-center mt-3 small">
+        <span class="text-muted">Belum punya akun?</span>
+        <a href="/auth/register" class="text-decoration-none">Daftar di sini</a>
+    </div>
+</div>
+
+</body>
+</html>

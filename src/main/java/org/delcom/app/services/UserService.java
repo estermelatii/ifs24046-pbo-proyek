@@ -1,53 +1,89 @@
 package org.delcom.app.services;
 
-import java.util.UUID;
-
 import org.delcom.app.entities.User;
 import org.delcom.app.repositories.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
-public class UserService {
-    private final UserRepository userRepository;
+public class UserService implements UserDetailsService {
 
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private UserRepository userRepository;
 
-    @Transactional
-    public User createUser(String name, String email, String password) {
-        User user = new User(name, email, password);
-        return userRepository.save(user);
-    }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-    public User getUserByEmail(String email) {
-        return userRepository.findFirstByEmail(email).orElse(null);
-    }
-
-    public User getUserById(UUID id) {
-        return userRepository.findById(id).orElse(null);
-    }
-
-    @Transactional
-    public User updateUser(UUID id, String name, String email) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user == null) {
-            return null;
+    // --- FITUR REGISTER ---
+    public User registerNewUser(User user) {
+        // Cek apakah email sudah ada
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException("Email sudah terdaftar!");
         }
-        user.setName(name);
-        user.setEmail(email);
-        return userRepository.save(user);
-    }
 
-    @Transactional
-    public User updatePassword(UUID id, String newPassword) {
-        User user = userRepository.findById(id).orElse(null);
-        if (user == null) {
-            return null;
+        // Enkripsi Password (PENTING!)
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+
+        // Set Default Role
+        if (user.getRole() == null || user.getRole().isEmpty()) {
+            user.setRole("USER");
         }
-        user.setPassword(newPassword);
+
+        System.out.println("REGISTER SUKSES: " + user.getEmail());
         return userRepository.save(user);
     }
 
+    // --- FITUR LOGIN (Dipanggil Otomatis oleh Spring Security) ---
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // CCTV: Ini akan muncul di terminal kalau tombol 'Masuk' ditekan
+        System.out.println("------------------------------------------------");
+        System.out.println("LOGIN ATTEMPT: Mencoba login dengan email -> " + email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    System.out.println("GAGAL: Email tidak ditemukan di Database.");
+                    return new UsernameNotFoundException("User tidak ditemukan: " + email);
+                });
+
+        System.out.println("USER DITEMUKAN: " + user.getEmail());
+        System.out.println("Password Hash di DB: " + user.getPassword());
+        System.out.println("------------------------------------------------");
+
+        // Mengembalikan object User bawaan Spring Security
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                Collections.emptyList()
+        );
+    }
+
+    // --- HELPER METHODS (Untuk Controller Lain) ---
+    public Optional<User> getUserById(UUID id) {
+        return userRepository.findById(id);
+    }
+
+    public Optional<User> getUserById(String id) {
+        try {
+            return getUserById(UUID.fromString(id));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    public void updateUser(String id, User userDetails) {
+        getUserById(id).ifPresent(user -> {
+            user.setName(userDetails.getName());
+            userRepository.save(user);
+        });
+    }
 }

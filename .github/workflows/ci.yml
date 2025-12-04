@@ -16,7 +16,7 @@ jobs:
         env:
           POSTGRES_DB: db_pbo_app
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: estermelati06
         ports:
           - 5432:5432
         options: >-
@@ -39,7 +39,7 @@ jobs:
         run: |
           cp src/main/resources/application.properties.template src/main/resources/application.properties
           sed -i 's|spring.datasource.username=.*|spring.datasource.username=postgres|g' src/main/resources/application.properties
-          sed -i 's|spring.datasource.password=.*|spring.datasource.password=postgres|g' src/main/resources/application.properties
+          sed -i 's|spring.datasource.password=.*|spring.datasource.password=estermelati06|g' src/main/resources/application.properties
 
       - name: Wait for PostgreSQL
         run: |

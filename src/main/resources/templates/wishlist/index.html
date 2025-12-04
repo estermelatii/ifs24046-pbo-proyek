@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .main-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .wishlist-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .wishlist-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        
+        .wishlist-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .priority-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .priority-HIGH {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .priority-MEDIUM {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .priority-LOW {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-badge {
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .btn-gradient:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+            color: white;
+        }
+        
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-star text-warning"></i> My Wishlist
+                </h1>
+                <div>
+                    <a href="/wishlist/statistics" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-chart-pie"></i> Statistics
+                    </a>
+                    <a href="/wishlist/create" class="btn btn-gradient">
+                        <i class="fas fa-plus"></i> Add Item
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Alert Messages -->
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <!-- Filter Section -->
+            <div class="filter-section">
+                <form method="get" action="/wishlist" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" 
+                               th:value="${searchQuery}" placeholder="Search items...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="">All Status</option>
+                            <option value="WISHLIST" th:selected="${selectedStatus == 'WISHLIST'}">Wishlist</option>
+                            <option value="PURCHASED" th:selected="${selectedStatus == 'PURCHASED'}">Purchased</option>
+                            <option value="CANCELLED" th:selected="${selectedStatus == 'CANCELLED'}">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Priority</label>
+                        <select name="priority" class="form-select">
+                            <option value="">All Priority</option>
+                            <option value="HIGH" th:selected="${selectedPriority == 'HIGH'}">High</option>
+                            <option value="MEDIUM" th:selected="${selectedPriority == 'MEDIUM'}">Medium</option>
+                            <option value="LOW" th:selected="${selectedPriority == 'LOW'}">Low</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}" 
+                                    th:selected="${selectedCategory == cat}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Wishlist Items Grid -->
+            <div class="row" th:if="${!items.isEmpty()}">
+                <div class="col-md-4" th:each="item : ${items}">
+                    <div class="card wishlist-card">
+                        <div class="position-relative">
+                            <img th:src="${item.imageUrl != null ? item.imageUrl : 'https://via.placeholder.com/400x300?text=No+Image'}" 
+                                 th:alt="${item.itemName}">
+                            <span class="priority-badge" 
+                                  th:classappend="${'priority-' + item.priority}"
+                                  th:text="${item.priority}"></span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${item.itemName}"></h5>
+                            <p class="card-text text-muted small" th:text="${item.description}"></p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="text-primary mb-0">
+                                    Rp <span th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')}"></span>
+                                </h4>
+                                <span class="badge status-badge"
+                                      th:classappend="${item.status.name() == 'WISHLIST' ? 'bg-info' : 
+                                                       item.status.name() == 'PURCHASED' ? 'bg-success' : 'bg-secondary'}"
+                                      th:text="${item.status}"></span>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-tag"></i> <span th:text="${item.category}"></span>
+                                </small>
+                                <small class="text-muted ms-2" th:if="${item.store != null}">
+                                    <i class="fas fa-store"></i> <span th:text="${item.store}"></span>
+                                </small>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <a th:href="@{/wishlist/{id}(id=${item.id})}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${items.isEmpty()}">
+                <i class="fas fa-shopping-bag"></i>
+                <h3>No Items in Your Wishlist</h3>
+                <p>Start adding items you want to buy!</p>
+                <a href="/wishlist/create" class="btn btn-gradient btn-lg">
+                    <i class="fas fa-plus"></i> Add Your First Item
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

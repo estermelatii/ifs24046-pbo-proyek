@@ -1,97 +1,40 @@
 package org.delcom.app.entities;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import jakarta.persistence.*;
+import lombok.Data;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@JsonPropertyOrder({ "id", "name", "email", "createdAt", "updatedAt" })
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@Data
 public class User {
 
-    // ======= Attributes =======
     @Id
-    @GeneratedValue(generator = "UUID")
-    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "name", nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(name = "email", nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    private String role; 
+
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ======= Constructors =======
+    public User() {}
 
-    public User() {
-    }
-
-    public User(String email, String password) {
-        this("", email, password);
-    }
-
-    public User(String name, String email, String password) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-    }
-
-    // ======= Getters and Setters =======
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    // ======= @PrePersist & @PreUpdate =======
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -101,5 +44,31 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // --- FITUR TAMBAHAN UNTUK MENGATASI ERROR ---
+
+    // 1. Mengatasi error "The method toResponseMap() is undefined"
+    public Map<String, Object> toResponseMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", this.id);
+        map.put("name", this.name);
+        map.put("email", this.email);
+        map.put("role", this.role);
+        map.put("createdAt", this.createdAt);
+        return map;
+    }
+
+    // 2. Mengatasi error "setId(UUID) ... arguments (String)" di UserService
+    // Kita buatkan setter khusus yang menerima String lalu mengubahnya jadi UUID
+    public void setId(String id) {
+        if (id != null) {
+            this.id = UUID.fromString(id);
+        }
+    }
+    
+    // Setter asli untuk UUID (Overloading) biar JPA tetap jalan
+    public void setId(UUID id) {
+        this.id = id;
     }
 }

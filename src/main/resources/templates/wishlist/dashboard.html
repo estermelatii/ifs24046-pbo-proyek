@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>WishTrack Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome (Icon) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #f4f7f6; color: #333; }
+        .card-item { transition: transform 0.2s; border: none; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card-item:hover { transform: translateY(-5px); }
+        .badge-status-PENDING { background-color: #ffc107; color: #000; } /* Kuning */
+        .badge-status-BOUGHT { background-color: #198754; color: #fff; } /* Hijau */
+        .img-cover { height: 200px; object-fit: cover; border-top-left-radius: 15px; border-top-right-radius: 15px; }
+        .navbar { background-color: #4F8FFF; } 
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="fas fa-heart"></i> WishTrack
+        </a>
+        <div class="d-flex text-white align-items-center">
+            <span class="me-3" th:if="${user != null}">Halo, <span th:text="${user.name}">User</span>!</span>
+            <a href="/logout" class="btn btn-sm btn-light text-primary">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Section 1: Statistik -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-muted">Statistik Wishlist</h5>
+                    <canvas id="wishlistChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card bg-primary text-white border-0 shadow-sm p-3">
+                        <h3><i class="fas fa-shopping-cart"></i> <span th:text="${totalBought}">0</span></h3>
+                        <p class="mb-0">Barang Sudah Dibeli</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-warning text-dark border-0 shadow-sm p-3">
+                        <h3><i class="fas fa-hourglass-half"></i> <span th:text="${totalPending}">0</span></h3>
+                        <p class="mb-0">Masih Rencana (Pending)</p>
+                    </div>
+                </div>
+                <div class="col-12 mt-3">
+                    <a href="/wishlist/add" class="btn btn-outline-primary w-100 py-3 border-2 border-dashed">
+                        <i class="fas fa-plus-circle fa-lg"></i> Tambah Wishlist Baru
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Daftar Barang -->
+    <h4 class="mb-3 border-start border-4 border-primary ps-3">Daftar Keinginanmu</h4>
+    
+    <div class="row g-4">
+        <!-- Looping Data -->
+        <div class="col-md-3" th:each="item : ${items}">
+            <div class="card card-item h-100">
+                
+                <!-- Gambar -->
+                <img th:if="${item.imageUrl != null}" 
+                     th:src="@{'/uploads/' + ${item.imageUrl}}" 
+                     class="card-img-top img-cover" alt="Foto Barang">
+                <img th:unless="${item.imageUrl != null}" 
+                     src="https://via.placeholder.com/300x200?text=No+Image" 
+                     class="card-img-top img-cover" alt="Placeholder">
+
+                <div class="card-body">
+                    <!-- Badge Status (VERSI AMAN) -->
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge bg-secondary" th:text="${item.category}">Umum</span>
+                        
+                        <!-- Pengecekan Status menggunakan String agar tidak error -->
+                        <span th:class="'badge badge-status-' + ${item.status}" 
+                              th:text="${item.status.toString() == 'BOUGHT' ? 'Sudah Dibeli' : 'Belum Dibeli'}">
+                        </span>
+                    </div>
+
+                    <h5 class="card-title fw-bold" th:text="${item.name}">Nama Barang</h5>
+                    
+                    <!-- Harga (VERSI AMAN: Cek Null dulu) -->
+                    <p class="card-text text-primary fw-bold">
+                        Rp <span th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') : '0'}">0</span>
+                    </p>
+                    
+                    <p class="small text-muted mb-1">
+                        <i class="far fa-calendar-alt"></i> Target: <span th:text="${item.targetDate}">-</span>
+                    </p>
+                    
+                    <p class="small text-secondary" th:text="${item.description}">Deskripsi...</p>
+                    
+                    <a th:if="${item.shopUrl != null && item.shopUrl != ''}" th:href="${item.shopUrl}" target="_blank" class="small text-decoration-none">
+                        <i class="fas fa-link"></i> Link Toko
+                    </a>
+                </div>
+
+                <div class="card-footer bg-white border-0 d-flex justify-content-between pb-3">
+                    <a th:href="@{/wishlist/{id}/toggle(id=${item.id})}" 
+                       class="btn btn-sm btn-outline-success" title="Tandai Status">
+                       <i class="fas fa-check"></i>
+                    </a>
+                    
+                    <a th:href="@{/wishlist/{id}/delete(id=${item.id})}" 
+                       class="btn btn-sm btn-outline-danger"
+                       onclick="return confirm('Yakin ingin menghapus?');">
+                       <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script Chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var bought = /*[[${totalBought}]]*/ 0;
+    var pending = /*[[${totalPending}]]*/ 0;
+
+    var ctx = document.getElementById('wishlistChart').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Sudah Dibeli', 'Belum Dibeli'],
+            datasets: [{
+                data: [bought, pending],
+                backgroundColor: ['#198754', '#ffc107'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>
