@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Analisis Statistik - WishTrack</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Font: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Background Premium Grainy */
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
+                radial-gradient(at 0% 0%, #f1f5f9 0px, transparent 50%),
+                radial-gradient(at 100% 0%, #3b82f6 0px, transparent 50%),
+                radial-gradient(at 100% 100%, #eff6ff 0px, transparent 50%),
+                radial-gradient(at 0% 100%, #dbeafe 0px, transparent 50%);
+            background-size: auto, cover;
+            background-attachment: fixed;
+            font-family: 'Poppins', sans-serif;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
+        /* Navbar Glass */
+        .navbar { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5); 
+            padding: 1rem 0; 
+        }
+
+        /* Card Container Styles */
+        .stat-card-container {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            overflow: hidden;
+            height: 100%;
+            transition: transform 0.3s;
+        }
+        .stat-card-container:hover { transform: translateY(-5px); }
+
+        .chart-wrapper {
+            position: relative;
+            height: 250px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Wrapper Khusus Kurva Besar */
+        .curve-wrapper {
+            position: relative;
+            height: 300px; 
+            width: 100%;
+        }
+
+        /* Summary Boxes */
+        .summary-box {
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            color: white;
+            transition: transform 0.2s;
+        }
+        .summary-box:hover { transform: translateY(-3px); }
+        
+        .box-green { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
+        .box-orange { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25); }
+        
+        .progress-custom {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar mb-5 sticky-top">
+    <div class="container">
+        <a class="btn btn-light rounded-pill px-4 shadow-sm fw-bold text-primary" href="/wishlist">
+            <i class="fas fa-arrow-left me-2"></i> Dashboard
+        </a>
+        <span class="fw-bold text-dark fs-5">Analisis Keuangan</span>
+    </div>
+</nav>
+
+<div class="container pb-5">
+    
+    <!-- ROW 1: Donut Chart & Ringkasan -->
+    <div class="row justify-content-center g-4 mb-4">
+        <!-- KOLOM 1: GRAFIK DONAT -->
+        <div class="col-lg-4">
+            <div class="stat-card-container p-4">
+                <h5 class="fw-bold text-center mb-4 text-secondary">Komposisi Status</h5>
+                <div class="chart-wrapper">
+                    <div th:if="${totalBought == 0 && totalPending == 0}" class="text-center text-muted">
+                        <i class="fas fa-chart-pie fa-3x mb-3 opacity-25"></i>
+                        <p class="small">Belum ada data</p>
+                    </div>
+                    <canvas id="doughnutChart" th:unless="${totalBought == 0 && totalPending == 0}"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- KOLOM 2: DETAIL ANGKA -->
+        <div class="col-lg-8">
+            <div class="stat-card-container p-4 p-md-5">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="summary-box box-green d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <h1 class="fw-bold mb-0" th:text="${totalBought}">0</h1>
+                                <span class="small opacity-75 fw-bold">BARANG DIBELI</span>
+                            </div>
+                            <i class="fas fa-check-circle fa-3x opacity-25"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="summary-box box-orange d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <h1 class="fw-bold mb-0" th:text="${totalPending}">0</h1>
+                                <span class="small opacity-75 fw-bold">MASIH RENCANA</span>
+                            </div>
+                            <i class="fas fa-hourglass-half fa-3x opacity-25"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="d-flex justify-content-between small fw-bold text-muted mb-2">
+                        <span>Success Rate</span>
+                        <span th:text="${(totalBought + totalPending) == 0 ? '0%' : #numbers.formatInteger((totalBought * 100.0) / (totalBought + totalPending), 0) + '%'}">0%</span>
+                    </div>
+                    <div class="progress progress-custom">
+                        <div class="progress-bar bg-success" role="progressbar" 
+                             th:style="'width: ' + (${(totalBought + totalPending) == 0 ? 0 : (totalBought * 100.0) / (totalBought + totalPending)}) + '%'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 2: BAR CHART (Budget per Kategori) - YANG KAMU MINTA -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stat-card-container p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-chart-bar text-warning me-2"></i> Anggaran per Kategori
+                    </h4>
+                </div>
+                <div class="curve-wrapper">
+                    <canvas id="barChart"></canvas>
+                </div>
+                <p class="text-center text-muted small mt-3">Grafik ini menunjukkan total estimasi biaya yang kamu alokasikan untuk setiap kategori.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 3: LINE CHART (Fluktuasi Harga) -->
+    <div class="row">
+        <div class="col-12">
+            <div class="stat-card-container p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-chart-area text-primary me-2"></i> Fluktuasi Harga Item
+                    </h4>
+                </div>
+                <div class="curve-wrapper">
+                    <canvas id="curveChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart JS -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    
+    // --- DATA ITEMS DARI CONTROLLER ---
+    var itemNames = [];
+    var itemPrices = [];
+    var itemCategories = [];
+
+    /*[# th:each="item : ${items}"]*/
+        itemNames.push(/*[[${item.name}]]*/ 'Barang');
+        itemPrices.push(/*[[${item.price}]]*/ 0);
+        itemCategories.push(/*[[${item.category}]]*/ 'Umum');
+    /*[/]*/
+
+    // --- 1. DONUT CHART ---
+    var bought = /*[[${totalBought}]]*/ 0;
+    var pending = /*[[${totalPending}]]*/ 0;
+
+    if(bought > 0 || pending > 0){
+        new Chart(document.getElementById('doughnutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Dibeli', 'Pending'],
+                datasets: [{
+                    data: [bought, pending],
+                    backgroundColor: ['#10b981', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+        });
+    }
+
+    // --- 2. BAR CHART (KATEGORI) - WARNA WARNI ---
+    
+    // Logic grouping data harga per kategori
+    var categoryTotals = {};
+    for(var i=0; i<itemCategories.length; i++){
+        var cat = itemCategories[i];
+        var price = itemPrices[i] || 0;
+        if(categoryTotals[cat]){
+            categoryTotals[cat] += price;
+        } else {
+            categoryTotals[cat] = price;
+        }
+    }
+
+    var catLabels = Object.keys(categoryTotals);
+    var catData = Object.values(categoryTotals);
+
+    // Palet Warna-warni (Sesuai request gambar search google)
+    var barColors = [
+        '#3b82f6', // Biru
+        '#ef4444', // Merah
+        '#f59e0b', // Kuning
+        '#10b981', // Hijau
+        '#8b5cf6', // Ungu
+        '#ec4899'  // Pink
+    ];
+
+    var ctxBar = document.getElementById('barChart').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar', // TIPE BAR (BATANG)
+        data: {
+            labels: catLabels,
+            datasets: [{
+                label: 'Total Anggaran',
+                data: catData,
+                backgroundColor: barColors,
+                borderRadius: 8, // Ujung batang melengkung
+                borderWidth: 0,
+                barPercentage: 0.5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) { return 'Rp ' + context.parsed.y.toLocaleString('id-ID'); }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    ticks: { callback: function(value) { return 'Rp ' + value/1000 + 'k'; } }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+
+    // --- 3. LINE CHART (FLUKTUASI) ---
+    var ctxCurve = document.getElementById('curveChart').getContext('2d');
+    var gradient = ctxCurve.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+    new Chart(ctxCurve, {
+        type: 'line',
+        data: {
+            labels: itemNames,
+            datasets: [{
+                label: 'Harga',
+                data: itemPrices,
+                borderColor: '#3b82f6',
+                borderWidth: 3,
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: '#3b82f6',
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    /*]]>*/
+</script>
+
+</body>
+</html>

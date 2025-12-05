@@ -1,159 +1,263 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>WishTrack Dashboard</title>
+    <title>Dashboard - WishTrack</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome (Icon) -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Font: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { background-color: #f4f7f6; color: #333; }
-        .card-item { transition: transform 0.2s; border: none; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card-item:hover { transform: translateY(-5px); }
-        .badge-status-PENDING { background-color: #ffc107; color: #000; } /* Kuning */
-        .badge-status-BOUGHT { background-color: #198754; color: #fff; } /* Hijau */
-        .img-cover { height: 200px; object-fit: cover; border-top-left-radius: 15px; border-top-right-radius: 15px; }
-        .navbar { background-color: #4F8FFF; } 
+        /* --- BACKGROUND STYLE: Grainy Gradient (Revisi Posisi) --- */
+        body {
+            background-color: #f8fafc;
+            
+            /* Layering: 
+               1. Noise Texture (Bintik halus)
+               2. Gradasi Warna (BIRU DIPINDAH KE KANAN)
+            */
+            background-image: 
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E"),
+                
+                /* POSISI GRADASI BARU: */
+                radial-gradient(at 0% 0%, #f1f5f9 0px, transparent 50%),    /* Kiri Atas: Putih Terang (Agar kartu menonjol) */
+                radial-gradient(at 100% 0%, #3b82f6 0px, transparent 50%),   /* Kanan Atas: Biru Kuat */
+                radial-gradient(at 100% 100%, #eff6ff 0px, transparent 50%), /* Kanan Bawah: Putih Biru */
+                radial-gradient(at 0% 100%, #dbeafe 0px, transparent 50%);   /* Kiri Bawah: Biru Pucat */
+                
+            background-size: auto, cover;
+            background-attachment: fixed;
+            
+            font-family: 'Poppins', sans-serif;
+            color: #1e293b;
+            min-height: 100vh;
+        }
+        
+        /* Navbar Glass */
+        .navbar { 
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5); 
+            padding: 1rem 0; 
+        }
+        
+        /* Stat Cards */
+        .stat-card { 
+            border: none; 
+            border-radius: 20px; 
+            color: white; 
+            overflow: hidden; 
+            position: relative; 
+            transition: transform 0.3s; 
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        
+        /* --- WARNA KARTU BARU (Hijau & Oranye) --- */
+        
+        /* Kartu Hijau (Barang Terbeli) */
+        .bg-gradient-green { 
+            background: linear-gradient(135deg, #10b981, #059669); /* Hijau Emerald */
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.25); /* Shadow Hijau */
+        }
+        
+        /* Kartu Oranye (Pending) */
+        .bg-gradient-orange { 
+            background: linear-gradient(135deg, #f59e0b, #d97706); 
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.25);
+        }
+        
+        /* Item Cards (Glassmorphism White) */
+        .card-item { 
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02); 
+            transition: all 0.3s; 
+            overflow: hidden; 
+        }
+        .card-item:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.08); 
+            background: #ffffff; 
+            border-color: #3b82f6; /* Hover border biru */
+        }
+        
+        .img-cover { height: 200px; object-fit: cover; transition: transform 0.5s; opacity: 1; }
+        .card-item:hover .img-cover { transform: scale(1.05); }
+        
+        /* Badges */
+        .badge-soft { padding: 6px 12px; border-radius: 30px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; border: none; }
+        .bg-soft-success { background-color: #d1fae5; color: #065f46; } 
+        .bg-soft-warning { background-color: #fef3c7; color: #92400e; } 
+        .bg-soft-secondary { background-color: #f1f5f9; color: #475569; }
+
+        .card-link { text-decoration: none; color: inherit; }
+        .card-link:hover h6 { color: #2563eb; }
+        
+        .btn-action-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: 0.2s; }
+        .btn-action-icon:hover { background-color: #f1f5f9; }
+        
+        .section-title { font-weight: 700; color: #1e293b; }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-dark mb-4">
+<nav class="navbar mb-5 sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="#">
-            <i class="fas fa-heart"></i> WishTrack
+        <a class="navbar-brand fw-bold text-primary" href="#" style="letter-spacing: 1px;">
+            <i class="fas fa-heart me-2"></i>WISHTRACK
         </a>
-        <div class="d-flex text-white align-items-center">
-            <span class="me-3" th:if="${user != null}">Halo, <span th:text="${user.name}">User</span>!</span>
-            <a href="/logout" class="btn btn-sm btn-light text-primary">Logout</a>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-secondary d-none d-md-block" th:if="${user != null}">Halo, <span class="fw-bold text-dark" th:text="${user.name}">User</span></span>
+            <a href="/logout" class="btn btn-sm btn-outline-danger px-4 rounded-pill fw-bold bg-white border-0 shadow-sm">Logout</a>
         </div>
     </div>
 </nav>
 
-<div class="container">
+<div class="container pb-5">
 
-    <!-- Section 1: Statistik -->
-    <div class="row mb-5">
+    <!-- Section 1: Top Area (Stats & Actions) -->
+    <div class="row g-4 mb-5">
+        <!-- Card 1: Total Dibeli (SEKARANG HIJAU) -->
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <h5 class="card-title text-muted">Statistik Wishlist</h5>
-                    <canvas id="wishlistChart"></canvas>
+            <div class="card stat-card bg-gradient-green h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center h-100">
+                    <div>
+                        <h1 class="fw-bold mb-0" th:text="${totalBought}">0</h1>
+                        <p class="mb-0 text-white-50 fw-medium">Barang Terbeli</p>
+                    </div>
+                    <i class="fas fa-check-circle fa-3x text-white opacity-25"></i>
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="card bg-primary text-white border-0 shadow-sm p-3">
-                        <h3><i class="fas fa-shopping-cart"></i> <span th:text="${totalBought}">0</span></h3>
-                        <p class="mb-0">Barang Sudah Dibeli</p>
+        
+        <!-- Card 2: Pending (TETAP ORANYE) -->
+        <div class="col-md-4">
+            <div class="card stat-card bg-gradient-orange h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center h-100">
+                    <div>
+                        <h1 class="fw-bold mb-0 text-white" th:text="${totalPending}">0</h1>
+                        <p class="mb-0 text-white-50 fw-medium">Masih Rencana</p>
                     </div>
+                    <i class="fas fa-hourglass-half fa-3x text-white opacity-25"></i>
                 </div>
-                <div class="col-md-6">
-                    <div class="card bg-warning text-dark border-0 shadow-sm p-3">
-                        <h3><i class="fas fa-hourglass-half"></i> <span th:text="${totalPending}">0</span></h3>
-                        <p class="mb-0">Masih Rencana (Pending)</p>
-                    </div>
-                </div>
-                <div class="col-12 mt-3">
-                    <a href="/wishlist/add" class="btn btn-outline-primary w-100 py-3 border-2 border-dashed">
-                        <i class="fas fa-plus-circle fa-lg"></i> Tambah Wishlist Baru
-                    </a>
-                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Action Buttons -->
+        <div class="col-md-4">
+            <div class="d-flex flex-column gap-3 h-100 justify-content-center">
+                <!-- Tombol Utama Tetap Biru Agar Senada dengan Tema -->
+                <a href="/wishlist/add" class="btn btn-primary btn-lg w-100 shadow-sm border-0 py-3 fw-bold" style="background-color: #3b82f6; border-radius: 15px;">
+                    <i class="fas fa-plus-circle me-2"></i> Tambah Wishlist
+                </a>
+                <a href="/wishlist/stats" class="btn w-100 shadow-sm border-0 py-3 fw-bold text-secondary" style="background-color: rgba(255,255,255,0.8); backdrop-filter: blur(5px); border-radius: 15px;">
+                    <i class="fas fa-chart-pie me-2 text-primary"></i> Lihat Statistik
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Section 2: Daftar Barang -->
-    <h4 class="mb-3 border-start border-4 border-primary ps-3">Daftar Keinginanmu</h4>
+    <!-- Section 2: List Header -->
+    <div class="d-flex justify-content-between align-items-end mb-4 border-bottom border-secondary border-opacity-10 pb-2">
+        <div>
+            <h4 class="section-title mb-1">Daftar Keinginanmu</h4>
+            <p class="text-secondary small mb-0">Semangat menabung untuk mewujudkannya!</p>
+        </div>
+        <span class="badge bg-white text-secondary shadow-sm px-3 py-2 rounded-pill" th:text="${items.size()} + ' Items'">0 Items</span>
+    </div>
     
+    <!-- Section 3: Grid Items -->
     <div class="row g-4">
-        <!-- Looping Data -->
-        <div class="col-md-3" th:each="item : ${items}">
-            <div class="card card-item h-100">
-                
-                <!-- Gambar -->
-                <img th:if="${item.imageUrl != null}" 
-                     th:src="@{'/uploads/' + ${item.imageUrl}}" 
-                     class="card-img-top img-cover" alt="Foto Barang">
-                <img th:unless="${item.imageUrl != null}" 
-                     src="https://via.placeholder.com/300x200?text=No+Image" 
-                     class="card-img-top img-cover" alt="Placeholder">
+        
+        <!-- State Kosong -->
+        <div class="col-12 text-center py-5" th:if="${items.empty}">
+            <div class="p-5 rounded-4 shadow-sm d-inline-block" style="background: rgba(255,255,255,0.6); backdrop-filter: blur(5px);">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png" width="120" class="mb-4 opacity-75" alt="Empty">
+                <h5 class="fw-bold text-muted">Belum ada wishlist</h5>
+                <p class="text-secondary mb-4">Yuk mulai tambahkan barang impianmu!</p>
+                <a href="/wishlist/add" class="btn btn-outline-primary rounded-pill px-4">Tambah Sekarang</a>
+            </div>
+        </div>
 
-                <div class="card-body">
-                    <!-- Badge Status (VERSI AMAN) -->
+        <!-- Looping Data Barang -->
+        <div class="col-md-6 col-lg-4 col-xl-3" th:each="item : ${items}">
+            <div class="card card-item h-100">
+                <!-- Gambar -->
+                <a th:href="@{/wishlist/{id}(id=${item.id})}" class="position-relative overflow-hidden d-block">
+                    <img th:if="${item.imageUrl != null}" th:src="@{'/uploads/' + ${item.imageUrl}}" class="card-img-top img-cover">
+                    <img th:unless="${item.imageUrl != null}" src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top img-cover">
+                    
+                    <!-- Overlay Gradient -->
+                    <div class="position-absolute bottom-0 start-0 w-100 h-25 bg-gradient-to-t from-black opacity-10"></div>
+                </a>
+
+                <div class="card-body p-3">
+                    <!-- Badges -->
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="badge bg-secondary" th:text="${item.category}">Umum</span>
+                        <span class="badge badge-soft bg-soft-secondary" th:text="${item.category}">Umum</span>
                         
-                        <!-- Pengecekan Status menggunakan String agar tidak error -->
-                        <span th:class="'badge badge-status-' + ${item.status}" 
-                              th:text="${item.status.toString() == 'BOUGHT' ? 'Sudah Dibeli' : 'Belum Dibeli'}">
+                        <span th:class="'badge badge-soft ' + (${item.status.toString() == 'BOUGHT'} ? 'bg-soft-success' : 'bg-soft-warning')">
+                            <i class="fas fa-circle fa-xs me-1"></i>
+                            <span th:text="${item.status.toString() == 'BOUGHT' ? 'Dibeli' : 'Pending'}"></span>
                         </span>
                     </div>
 
-                    <h5 class="card-title fw-bold" th:text="${item.name}">Nama Barang</h5>
+                    <!-- Judul -->
+                    <a th:href="@{/wishlist/{id}(id=${item.id})}" class="card-link">
+                        <h6 class="card-title fw-bold mb-1 text-truncate" th:text="${item.name}">Nama Barang</h6>
+                    </a>
                     
-                    <!-- Harga (VERSI AMAN: Cek Null dulu) -->
-                    <p class="card-text text-primary fw-bold">
+                    <!-- Harga -->
+                    <p class="text-primary fw-bold mb-3 fs-5">
                         Rp <span th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') : '0'}">0</span>
                     </p>
                     
-                    <p class="small text-muted mb-1">
-                        <i class="far fa-calendar-alt"></i> Target: <span th:text="${item.targetDate}">-</span>
-                    </p>
-                    
-                    <p class="small text-secondary" th:text="${item.description}">Deskripsi...</p>
-                    
-                    <a th:if="${item.shopUrl != null && item.shopUrl != ''}" th:href="${item.shopUrl}" target="_blank" class="small text-decoration-none">
-                        <i class="fas fa-link"></i> Link Toko
-                    </a>
-                </div>
+                    <!-- Tanggal -->
+                    <div class="small text-muted d-flex align-items-center mb-3">
+                         <i class="far fa-calendar-alt me-2 text-warning"></i> 
+                         Target: <span class="ms-1" th:text="${item.targetDate}">-</span>
+                    </div>
 
-                <div class="card-footer bg-white border-0 d-flex justify-content-between pb-3">
-                    <a th:href="@{/wishlist/{id}/toggle(id=${item.id})}" 
-                       class="btn btn-sm btn-outline-success" title="Tandai Status">
-                       <i class="fas fa-check"></i>
-                    </a>
-                    
-                    <a th:href="@{/wishlist/{id}/delete(id=${item.id})}" 
-                       class="btn btn-sm btn-outline-danger"
-                       onclick="return confirm('Yakin ingin menghapus?');">
-                       <i class="fas fa-trash"></i>
-                    </a>
+                    <!-- Footer Buttons -->
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary border-opacity-10">
+                        <!-- Tombol Ceklis -->
+                        <a th:href="@{/wishlist/{id}/toggle(id=${item.id})}" 
+                           class="btn-action-icon text-success" 
+                           title="Tandai Selesai"
+                           data-bs-toggle="tooltip">
+                           <i class="fas fa-check-circle fa-lg"></i>
+                        </a>
+
+                        <div class="d-flex gap-2">
+                            <!-- Tombol Detail -->
+                            <a th:href="@{/wishlist/{id}(id=${item.id})}" 
+                               class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                               Detail
+                            </a>
+                            
+                            <!-- Tombol Hapus -->
+                            <a th:href="@{/wishlist/{id}/delete(id=${item.id})}" 
+                               class="btn-action-icon text-danger" 
+                               onclick="return confirm('Yakin ingin menghapus?');"
+                               title="Hapus">
+                               <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Script Chart -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    var bought = /*[[${totalBought}]]*/ 0;
-    var pending = /*[[${totalPending}]]*/ 0;
-
-    var ctx = document.getElementById('wishlistChart').getContext('2d');
-    var myChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Sudah Dibeli', 'Belum Dibeli'],
-            datasets: [{
-                data: [bought, pending],
-                backgroundColor: ['#198754', '#ffc107'],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'bottom' } }
-        }
-    });
-    /*]]>*/
-</script>
+<!-- Script Bootstrap JS (Untuk Tooltip jika dibutuhkan) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

@@ -19,12 +19,13 @@ public class WishlistController {
     @Autowired private WishlistService wishlistService;
     @Autowired private AuthService authService; 
 
+    // 1. DASHBOARD
     @GetMapping
     public String dashboard(Model model) {
         User user = authService.getCurrentUser();
-        if (user == null) return "redirect:/auth/login"; // Jaga-jaga kalau sesi habis
+        if (user == null) return "redirect:/auth/login";
 
-        model.addAttribute("user", user); // Biar nama user muncul di header
+        model.addAttribute("user", user);
         model.addAttribute("items", wishlistService.getAllItems(user));
         model.addAttribute("totalPending", wishlistService.countPending(user));
         model.addAttribute("totalBought", wishlistService.countBought(user));
@@ -32,29 +33,44 @@ public class WishlistController {
         return "wishlist/dashboard";
     }
 
+    // 2. HALAMAN STATISTIK
+    // Posisi tetap DI ATAS /{id} agar aman dari error UUID
+    @GetMapping("/stats")
+    public String statistics(Model model) {
+        User user = authService.getCurrentUser();
+        if (user == null) return "redirect:/auth/login";
+
+        model.addAttribute("user", user);
+        
+        // --- [PENAMBAHAN PENTING] ---
+        // Kita kirim daftar barang ke halaman statistik
+        // agar bisa diambil datanya (Nama & Harga) untuk bikin Kurva Grafik
+        model.addAttribute("items", wishlistService.getAllItems(user)); 
+        // -----------------------------
+
+        model.addAttribute("totalPending", wishlistService.countPending(user));
+        model.addAttribute("totalBought", wishlistService.countBought(user));
+
+        return "wishlist/stats";
+    }
+
+    // 3. FORM TAMBAH
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("wishlistForm", new WishlistForm());
         return "wishlist/form";
     }
 
-    // --- BAGIAN INI YANG PENTING UNTUK DIPERBAIKI ---
     @PostMapping("/add")
     public String processAdd(@ModelAttribute WishlistForm form) throws IOException {
-        // 1. Cari tahu siapa yang login
         User user = authService.getCurrentUser();
-        
-        // 2. Kalau user tidak ketemu, suruh login lagi (jangan simpan barang)
-        if (user == null) {
-            return "redirect:/auth/login";
-        }
+        if (user == null) return "redirect:/auth/login";
 
-        // 3. Simpan barang dengan melampirkan data user
         wishlistService.addItem(user, form);
-        
         return "redirect:/wishlist";
     }
 
+    // 4. ACTION TOGGLE & DELETE
     @GetMapping("/{id}/toggle")
     public String toggleStatus(@PathVariable UUID id) {
         wishlistService.changeStatus(id);
@@ -65,5 +81,23 @@ public class WishlistController {
     public String deleteItem(@PathVariable UUID id) {
         wishlistService.deleteItem(id);
         return "redirect:/wishlist";
+    }
+
+    // 5. DETAIL BARANG (Wajib paling bawah)
+    @GetMapping("/{id}")
+    public String viewDetail(@PathVariable UUID id, Model model) {
+        User currentUser = authService.getCurrentUser();
+        if (currentUser == null) return "redirect:/auth/login";
+        
+        var item = wishlistService.getAllItems(currentUser)
+                .stream()
+                .filter(i -> i.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+
+        if (item == null) return "redirect:/wishlist";
+
+        model.addAttribute("item", item);
+        return "wishlist/detail";
     }
 }
