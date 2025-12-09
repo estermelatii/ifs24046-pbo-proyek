@@ -12,11 +12,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Logika agar folder upload bisa diakses lewat URL
-        Path uploadDir = Paths.get("./src/main/resources/static/uploads");
+        // Mengarahkan URL /uploads/** ke folder fisik di komputer
+        Path uploadDir = Paths.get("src/main/resources/static/uploads");
         String uploadPath = uploadDir.toFile().getAbsolutePath();
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:/" + uploadPath + "/");
+                .addResourceLocations("file:///" + uploadPath + "/");
     }
 }

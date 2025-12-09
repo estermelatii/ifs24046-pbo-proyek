@@ -15,6 +15,10 @@ public class RegisterForm {
     @NotBlank(message = "Kata sandi harus diisi")
     private String password;
 
+    // --- TAMBAHAN PENTING ---
+    @NotBlank(message = "Konfirmasi kata sandi harus diisi")
+    private String passwordConfirm; 
+
     // Constructor
     public RegisterForm() {
     }
@@ -42,5 +46,14 @@ public class RegisterForm {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    // --- GETTER & SETTER untuk passwordConfirm ---
+    public String getPasswordConfirm() {
+        return passwordConfirm;
+    }
+
+    public void setPasswordConfirm(String passwordConfirm) {
+        this.passwordConfirm = passwordConfirm;
     }
 }

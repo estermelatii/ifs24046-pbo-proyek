@@ -3,40 +3,40 @@ package org.delcom.app.services;
 import org.delcom.app.entities.User;
 import org.delcom.app.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
-public class AuthService {
+public class AuthService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
 
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // 1. Cari user di database berdasarkan email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User tidak ditemukan dengan email: " + email));
+
+        // 2. Kembalikan data user ke Spring Security
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(), // Password yang terenkripsi di DB
+                new ArrayList<>()   // List roles (kosongkan dulu)
+        );
+    }
+    
+    // Helper untuk mengambil user yang sedang login di Controller
     public User getCurrentUser() {
-        // 1. Ambil data autentikasi dari sistem keamanan Spring
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        // 2. Cek apakah ada yang login?
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            System.out.println("AUTH SERVICE: Tidak ada user yang login (Anonymous).");
-            return null;
+        var principal = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            String email = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            return userRepository.findByEmail(email).orElse(null);
         }
-
-        // 3. Ambil Email dari sesi login
-        String email = null;
-        Object principal = authentication.getPrincipal();
-
-        if (principal instanceof UserDetails) {
-            email = ((UserDetails) principal).getUsername();
-        } else {
-            email = principal.toString();
-        }
-
-        System.out.println("AUTH SERVICE: Mencari user dengan email -> " + email);
-
-        // 4. Cari User di Database berdasarkan email tadi
-        return userRepository.findByEmail(email).orElse(null);
+        return null;
     }
 }

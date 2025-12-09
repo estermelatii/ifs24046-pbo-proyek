@@ -3,87 +3,61 @@ package org.delcom.app.services;
 import org.delcom.app.entities.User;
 import org.delcom.app.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserService {
 
-    @Autowired
+    @Autowired 
     private UserRepository userRepository;
+    
+    @Autowired 
+    private PasswordEncoder passwordEncoder; 
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    // --- FITUR REGISTER ---
+    // --- 1. FITUR REGISTER (Baru) ---
     public User registerNewUser(User user) {
-        // Cek apakah email sudah ada
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new RuntimeException("Email sudah terdaftar!");
+        // Validasi Email Duplikat
+        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
+        if (existingUser.isPresent()) {
+            throw new RuntimeException("Email sudah digunakan! Silakan gunakan email lain.");
         }
 
-        // Enkripsi Password (PENTING!)
+        // Enkripsi Password
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
-
-        // Set Default Role
-        if (user.getRole() == null || user.getRole().isEmpty()) {
-            user.setRole("USER");
-        }
-
-        System.out.println("REGISTER SUKSES: " + user.getEmail());
+        
         return userRepository.save(user);
     }
 
-    // --- FITUR LOGIN (Dipanggil Otomatis oleh Spring Security) ---
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // CCTV: Ini akan muncul di terminal kalau tombol 'Masuk' ditekan
-        System.out.println("------------------------------------------------");
-        System.out.println("LOGIN ATTEMPT: Mencoba login dengan email -> " + email);
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    System.out.println("GAGAL: Email tidak ditemukan di Database.");
-                    return new UsernameNotFoundException("User tidak ditemukan: " + email);
-                });
-
-        System.out.println("USER DITEMUKAN: " + user.getEmail());
-        System.out.println("Password Hash di DB: " + user.getPassword());
-        System.out.println("------------------------------------------------");
-
-        // Mengembalikan object User bawaan Spring Security
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                Collections.emptyList()
-        );
+    // --- 2. FITUR CARI USER (Untuk Login/Profile) ---
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
     }
 
-    // --- HELPER METHODS (Untuk Controller Lain) ---
-    public Optional<User> getUserById(UUID id) {
-        return userRepository.findById(id);
-    }
+    // --- 3. FITUR UPDATE USER (Yang tadi hilang) ---
+    // Error di UserController minta method: updateUser(String, User)
+    public void updateUser(String id, User updatedData) {
+        // Ubah ID dari String ke UUID
+        UUID userId = UUID.fromString(id);
+        
+        // Cari user lama di database
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
 
-    public Optional<User> getUserById(String id) {
-        try {
-            return getUserById(UUID.fromString(id));
-        } catch (Exception e) {
-            return Optional.empty();
+        // Update Data (Nama)
+        existingUser.setName(updatedData.getName());
+
+        // Update Password (Hanya jika user mengisi password baru)
+        if (updatedData.getPassword() != null && !updatedData.getPassword().isEmpty()) {
+            String encodedPassword = passwordEncoder.encode(updatedData.getPassword());
+            existingUser.setPassword(encodedPassword);
         }
-    }
 
-    public void updateUser(String id, User userDetails) {
-        getUserById(id).ifPresent(user -> {
-            user.setName(userDetails.getName());
-            userRepository.save(user);
-        });
+        // Simpan Perubahan
+        userRepository.save(existingUser);
     }
 }

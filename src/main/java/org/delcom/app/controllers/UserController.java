@@ -15,35 +15,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    @Autowired private AuthService authService;
+    @Autowired private UserService userService;
 
-    @Autowired
-    private AuthService authService;
-
-    // Menampilkan Halaman Profil Saya
+    // Tampilkan Halaman Profil
     @GetMapping("/profile")
-    public String myProfile(Model model) {
-        User currentUser = authService.getCurrentUser();
-        
-        if (currentUser == null) {
-            return "redirect:/auth/login";
-        }
+    public String showProfile(Model model) {
+        User user = authService.getCurrentUser();
+        if (user == null) return "redirect:/auth/login";
 
-        model.addAttribute("user", currentUser);
-        return "user/profile"; // Nanti kita buat file profile.html
+        model.addAttribute("user", user);
+        return "user/profile"; // Mengarah ke templates/user/profile.html
     }
 
-    // Proses Update Profil (Ganti Nama)
+    // Proses Update Profil
     @PostMapping("/update")
-    public String updateProfile(@ModelAttribute User userForm) {
+    public String updateProfile(@ModelAttribute User updatedUser) {
         User currentUser = authService.getCurrentUser();
-        
-        if (currentUser != null) {
-            // Kita pakai ID dari user yang sedang login agar aman
-            userService.updateUser(currentUser.getId().toString(), userForm);
-        }
-        
+        if (currentUser == null) return "redirect:/auth/login";
+
+        // Panggil service untuk update nama & password
+        userService.updateUser(currentUser.getId().toString(), updatedUser);
+
         return "redirect:/user/profile?success";
     }
 }

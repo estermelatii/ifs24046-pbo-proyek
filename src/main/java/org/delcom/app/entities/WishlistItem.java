@@ -28,18 +28,19 @@ public class WishlistItem {
 
     private BigDecimal price;
 
+    // --- FIELD BARU: TABUNGAN ---
+    @Column(name = "saved_amount")
+    private BigDecimal savedAmount = BigDecimal.ZERO; 
+    // ----------------------------
+
     private String category;
 
     @Column(name = "target_date")
     private LocalDate targetDate;
 
-    // --- PERBAIKAN UTAMA DI SINI ---
-    // Menambah kapasitas penyimpanan URL menjadi 2048 karakter
-    // agar link Shopee/Tokopedia yang panjang bisa masuk.
     @Column(name = "shop_url", length = 2048)
     private String shopUrl;
 
-    // Menggunakan tipe TEXT agar bisa menampung deskripsi yang sangat panjang
     @Column(columnDefinition = "TEXT")
     private String description;
 

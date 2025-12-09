@@ -1,6 +1,8 @@
 package org.delcom.app.controllers;
 
-import org.delcom.app.entities.User; // Pastikan pakai User entity
+import org.delcom.app.dto.LoginForm;
+import org.delcom.app.dto.RegisterForm;
+import org.delcom.app.entities.User;
 import org.delcom.app.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -17,25 +19,43 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
-    // Menampilkan Halaman Login
+    // 1. HALAMAN LOGIN
     @GetMapping("/login")
-    public String showLoginForm() {
+    public String showLoginForm(Model model) {
+        model.addAttribute("loginForm", new LoginForm()); 
         return "auth/login"; 
     }
 
-    // Menampilkan Halaman Register
+    // 2. HALAMAN REGISTER
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
-        // PERBAIKAN: Gunakan new User() agar cocok dengan method POST di bawah
-        model.addAttribute("user", new User()); 
+        model.addAttribute("registerForm", new RegisterForm()); 
         return "auth/register"; 
     }
 
-    // Proses Register
-    @PostMapping("/register")
-    public String processRegister(@ModelAttribute("user") User user) {
-        // Simpan user baru
-        userService.registerNewUser(user); 
+    // 3. PROSES REGISTER
+    @PostMapping("/register/post")
+    public String processRegister(@ModelAttribute("registerForm") RegisterForm form) {
+        
+        // Cek password match
+        if (!form.getPassword().equals(form.getPasswordConfirm())) {
+            return "redirect:/auth/register?error=password_mismatch";
+        }
+
+        try {
+            User user = new User();
+            user.setName(form.getName());
+            user.setEmail(form.getEmail());
+            user.setPassword(form.getPassword());
+            
+            userService.registerNewUser(user); // <--- Ini yang bisa bikin error kalau email kembar
+            
+        } catch (RuntimeException e) {
+            // TANGKAP ERRORNYA DISINI
+            // Balik lagi ke halaman register dengan pesan error
+            return "redirect:/auth/register?error=email_exists";
+        }
+        
         return "redirect:/auth/login?registered";
     }
 }

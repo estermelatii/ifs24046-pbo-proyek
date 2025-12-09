@@ -6,6 +6,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserRepository extends JpaRepository<User, UUID> {
-    // Mencari user berdasarkan email (Penting untuk Login)
+    // TAMBAHKAN INI:
     Optional<User> findByEmail(String email);
 }

@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
@@ -13,50 +15,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Matikan CSRF sementara biar tidak ribet saat testing form
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) 
 
-            // 2. Atur Izin Akses URL
             .authorizeHttpRequests(auth -> auth
-                // HALAMAN YANG BOLEH DIAKSES TANPA LOGIN (PENTING!)
                 .requestMatchers(
-                    "/", 
-                    "/auth/**",       // Login & Register Controller
-                    "/login", 
-                    "/register", 
-                    "/css/**",        // File CSS
-                    "/js/**",         // File Javascript
-                    "/images/**",     // Gambar Aset
-                    "/uploads/**"     // Gambar Upload User
+                    "/", "/auth/**", "/css/**", "/js/**", "/images/**", "/assets/**", "/uploads/**", "/favicon.ico", "/error"
                 ).permitAll()
-                
-                // SISANYA WAJIB LOGIN
                 .anyRequest().authenticated()
             )
 
-            // 3. Konfigurasi Form Login
+            // --- KONFIGURASI LOGIN ---
             .formLogin(login -> login
-                .loginPage("/auth/login")       // URL Halaman Login Custom
-                .loginProcessingUrl("/login")   // URL tujuan saat tombol "Submit" ditekan
-                .defaultSuccessUrl("/wishlist", true) // Kalau sukses, pergi ke Dashboard Wishlist
+                .loginPage("/auth/login")           
+                .loginProcessingUrl("/auth/login/post")  
+                
+                // [PENTING!] Memberitahu Spring bahwa kita login pakai 'email', bukan 'username'
+                .usernameParameter("email") 
+                // -----------------------------------------------------------------------------
+
+                .defaultSuccessUrl("/wishlist", true)    
+                .failureUrl("/auth/login?error")    
                 .permitAll()
             )
 
-            // 4. Konfigurasi Logout
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/auth/login?logout")
+                .logoutSuccessUrl("/auth/login?logout") 
+                .deleteCookies("JSESSIONID")            
                 .permitAll()
             );
 
         return http.build();
     }
-    // ... kode filterChain yang tadi ...
 
-    // TAMBAHKAN INI: Alat pengaman password
     @Bean
-    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
-
-} // Tutup class SecurityConfig
+}
