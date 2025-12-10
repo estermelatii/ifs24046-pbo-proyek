@@ -1,6 +1,7 @@
 package org.delcom.app.controllers;
 
 import org.delcom.app.dto.WishlistForm;
+import org.delcom.app.dto.WishlistStats; // Import DTO baru
 import org.delcom.app.entities.User;
 import org.delcom.app.entities.WishlistItem;
 import org.delcom.app.services.AuthService;
@@ -31,21 +32,28 @@ public class WishlistController {
         return "wishlist/dashboard";
     }
 
+    // --- BAGIAN INI YANG MEMPERBAIKI CHART ---
     @GetMapping("/stats")
     public String statistics(Model model) {
         User user = authService.getCurrentUser();
         if (user == null) return "redirect:/auth/login";
+        
+        // Ambil data statistik lengkap dari service
+        WishlistStats stats = wishlistService.getStats(user);
+        
+        // Kirim ke HTML dengan nama "stats" (Sesuai dengan ${stats...} di HTML)
+        model.addAttribute("stats", stats);
         model.addAttribute("user", user);
-        model.addAttribute("items", wishlistService.getAllItems(user)); // Data items untuk kurva
-        model.addAttribute("totalPending", wishlistService.countPending(user));
-        model.addAttribute("totalBought", wishlistService.countBought(user));
+        model.addAttribute("items", wishlistService.getAllItems(user));
+        
         return "wishlist/stats";
     }
+    // -----------------------------------------
 
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("wishlistForm", new WishlistForm());
-        model.addAttribute("isEdit", false); // Penanda Tambah Baru
+        model.addAttribute("isEdit", false);
         return "wishlist/form";
     }
 
@@ -57,28 +65,26 @@ public class WishlistController {
         return "redirect:/wishlist";
     }
 
-    // --- FITUR BARU: TAMPILKAN FORM EDIT ---
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable UUID id, Model model) {
         WishlistItem item = wishlistService.findById(id);
         if (item == null) return "redirect:/wishlist";
 
-        // Salin data lama ke form agar user tidak ngetik ulang
         WishlistForm form = new WishlistForm();
         form.setId(item.getId());
         form.setName(item.getName());
         form.setPrice(item.getPrice());
+        form.setSavedAmount(item.getSavedAmount()); // Load tabungan
         form.setCategory(item.getCategory());
         form.setTargetDate(item.getTargetDate());
         form.setShopUrl(item.getShopUrl());
         form.setDescription(item.getDescription());
         
         model.addAttribute("wishlistForm", form);
-        model.addAttribute("isEdit", true); // Penanda sedang Edit
+        model.addAttribute("isEdit", true);
         return "wishlist/form";
     }
 
-    // --- FITUR BARU: PROSES UPDATE ---
     @PostMapping("/update")
     public String processUpdate(@ModelAttribute WishlistForm form) throws IOException {
         User user = authService.getCurrentUser();

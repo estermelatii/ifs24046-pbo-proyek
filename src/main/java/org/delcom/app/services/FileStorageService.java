@@ -13,46 +13,42 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
-    @Value("${app.upload.dir:./uploads}")
-    protected String uploadDir;
+    
+    // Default ke folder static agar gambar langsung tampil di browser
+    @Value("${app.upload.dir:src/main/resources/static/uploads/}")
+    private String uploadDir;
 
-    public String storeFile(MultipartFile file, UUID todoId) throws IOException {
+    public String storeFile(MultipartFile file, UUID entityId) throws IOException {
         // Buat directory jika belum ada
         Path uploadPath = Paths.get(uploadDir);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
 
-        // Generate unique filename
+        // Generate nama file unik
         String originalFilename = file.getOriginalFilename();
         String fileExtension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
 
-        String filename = "cover_" + todoId.toString() + fileExtension;
+        // Ganti prefix "cover_" (Todo) menjadi "item_" (Wishlist)
+        String filename = "item_" + entityId.toString() + fileExtension;
 
         // Simpan file
         Path filePath = uploadPath.resolve(filename);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        return filename;
+        return filename; 
     }
 
     public boolean deleteFile(String filename) {
         try {
+            if (filename == null) return false;
             Path filePath = Paths.get(uploadDir).resolve(filename);
             return Files.deleteIfExists(filePath);
         } catch (IOException e) {
             return false;
         }
-    }
-
-    public Path loadFile(String filename) {
-        return Paths.get(uploadDir).resolve(filename);
-    }
-
-    public boolean fileExists(String filename) {
-        return Files.exists(loadFile(filename));
     }
 }
