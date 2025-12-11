@@ -312,10 +312,28 @@ class StartupInfoLoggerTest {
 
         // Assert
         String output = outputStream.toString();
-        // Should contain the required output text
-        assertNotNull(output);
-        assertFalse(output.isEmpty());
-        assertTrue(output.contains("Application started successfully!"));
+        
+        // Check that output contains required content
+        assertNotNull(output, "Output should not be null");
+        assertFalse(output.isEmpty(), "Output should not be empty");
+        assertTrue(output.contains("Application started successfully!"), "Should contain success message");
+        
+        // Check for empty lines (newline characters at start and end)
+        assertTrue(output.startsWith("\n") || output.startsWith("\r\n"), "Output should start with empty line");
+        assertTrue(output.endsWith("\n") || output.endsWith("\r\n"), "Output should end with empty line");
+        
+        // Count actual content lines (non-empty lines excluding ANSI codes)
+        String cleanOutput = output.replaceAll("\u001B\\[[;\\d]*m", ""); // Remove ANSI codes
+        String[] lines = cleanOutput.split("\\r?\\n");
+        long contentLines = 0;
+        for (String line : lines) {
+            if (!line.trim().isEmpty()) {
+                contentLines++;
+            }
+        }
+        
+        // Should have exactly 3 content lines: success message, URL, LiveReload status
+        assertEquals(3, contentLines, "Should have exactly 3 content lines");
     }
 
     @org.junit.jupiter.api.AfterEach

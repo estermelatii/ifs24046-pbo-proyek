@@ -13,7 +13,7 @@
     </parent>
     
     <groupId>org.delcom</groupId>
-    <artifactId>wishlist-app</artifactId>
+    <artifactId>spring-boot-starter-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Wishlist Tracker</name>
     <description>Aplikasi Wishlist Tracker dengan Spring Boot</description>
