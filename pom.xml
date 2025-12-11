@@ -121,13 +121,13 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
             
-            <!-- Plugin JaCoCo (Pembuat Laporan) -->
+            <!-- Plugin JaCoCo (Pembuat Laporan Coverage) -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <executions>
-                    <!-- Prepare agent for test execution -->
+                    <!-- Prepare agent for collecting coverage data -->
                     <execution>
                         <id>prepare-agent</id>
                         <goals>
@@ -135,7 +135,7 @@
                         </goals>
                     </execution>
                     
-                    <!-- Generate report after test -->
+                    <!-- Generate coverage report after tests -->
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
@@ -144,26 +144,29 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <!-- Exclude package utils dari report -->
                                 <exclude>org/delcom/app/utils/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>
                     
-                    <!-- Check coverage (optional, bisa di-comment jika tidak perlu) -->
+                    <!-- Check coverage thresholds -->
                     <execution>
-                        <id>check</id>
-                        <phase>verify</phase>
+                        <id>jacoco-check</id>
                         <goals>
                             <goal>check</goal>
                         </goals>
                         <configuration>
                             <rules>
                                 <rule>
-                                    <element>PACKAGE</element>
+                                    <element>BUNDLE</element>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.00</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
                                             <minimum>0.00</minimum>
                                         </limit>
@@ -175,13 +178,11 @@
                 </executions>
             </plugin>
 
-            <!-- PLUGIN PENTING: SUREFIRE (Penyelamat Java 25 & JaCoCo) -->
+            <!-- PLUGIN SUREFIRE untuk Java 25 & Mockito -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <!-- @{argLine} memanggil JaCoCo -->
-                    <!-- Sisanya memperbaiki error Mockito di Java 25 -->
                     <argLine>@{argLine} -Dnet.bytebuddy.experimental=true -XX:+EnableDynamicAgentLoading</argLine>
                 </configuration>
             </plugin>
