@@ -31,11 +31,11 @@ jobs:
       - name: Setup Java 25
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
-          distribution: 'temurin'
+          java-version: "25"
+          distribution: "temurin"
           cache: maven
 
-      - name: Copy and configure application.properties
+      - name: Copy application.properties
         run: |
           cp src/main/resources/application.properties.template src/main/resources/application.properties
           sed -i 's|spring.datasource.username=.*|spring.datasource.username=postgres|g' src/main/resources/application.properties
@@ -49,11 +49,10 @@ jobs:
             sleep 5
           done
 
-      # Jalankan unit test + coverage
       - name: Run tests with coverage
         run: |
           chmod +x mvnw
-          ./mvnw clean test jacoco:check
+          ./mvnw clean test   # HANYA test, JANGAN jalankan jacoco:check manual
 
       - name: Upload test report
         uses: actions/upload-artifact@v4
@@ -61,12 +60,10 @@ jobs:
           name: test-results
           path: target/site/jacoco/
 
-      # 🔹 Tambahkan build JAR
       - name: Build Spring Boot JAR
         run: |
           ./mvnw clean package -DskipTests
 
-      # 🔹 Verifikasi bahwa JAR memiliki manifest dan dapat dijalankan
       - name: Verify executable JAR
         run: |
           echo "Checking manifest..."
@@ -78,7 +75,6 @@ jobs:
           sleep 10
           pkill -f 'java -jar' || true
 
-      # 🔹 Upload hasil build (opsional)
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
         with:

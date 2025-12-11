@@ -93,27 +93,30 @@ class UserTests {
     @Test
     @DisplayName("Test onCreate() - Should set createdAt and updatedAt")
     void testOnCreate() {
-        // Arrange
-        LocalDateTime before = LocalDateTime.now();
-        
         // Act
         user.onCreate();
-        
-        LocalDateTime after = LocalDateTime.now();
 
         // Assert
-        assertNotNull(user.getCreatedAt());
-        assertNotNull(user.getUpdatedAt());
+        assertNotNull(user.getCreatedAt(), "createdAt should not be null");
+        assertNotNull(user.getUpdatedAt(), "updatedAt should not be null");
         
-        // Check that both timestamps are within reasonable range
-        assertTrue(user.getCreatedAt().isAfter(before.minusSeconds(1)) || 
-                   user.getCreatedAt().isEqual(before.truncatedTo(ChronoUnit.SECONDS)));
-        assertTrue(user.getCreatedAt().isBefore(after.plusSeconds(1)) || 
-                   user.getCreatedAt().isEqual(after.truncatedTo(ChronoUnit.SECONDS)));
+        // Check that createdAt and updatedAt are equal (or very close) when truncated to milliseconds
+        assertEquals(
+            user.getCreatedAt().truncatedTo(ChronoUnit.MILLIS), 
+            user.getUpdatedAt().truncatedTo(ChronoUnit.MILLIS),
+            "createdAt and updatedAt should be equal when created"
+        );
         
-        // Check that createdAt and updatedAt are equal when truncated to milliseconds
-        assertEquals(user.getCreatedAt().truncatedTo(ChronoUnit.MILLIS), 
-                     user.getUpdatedAt().truncatedTo(ChronoUnit.MILLIS));
+        // Verify the timestamps are recent (within the last second)
+        LocalDateTime now = LocalDateTime.now();
+        assertTrue(
+            user.getCreatedAt().isAfter(now.minusSeconds(1)),
+            "createdAt should be within the last second"
+        );
+        assertTrue(
+            user.getCreatedAt().isBefore(now.plusSeconds(1)),
+            "createdAt should not be in the future"
+        );
     }
 
     @Test
