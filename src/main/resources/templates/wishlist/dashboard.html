@@ -2,241 +2,320 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Dashboard - WishTrack</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Google Font: Poppins -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 (Popup Cantik) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     
     <style>
-        /* --- BACKGROUND & LAYOUT --- */
-        body { background-color: #f0f4f8; font-family: 'Poppins', sans-serif; color: #1e293b; min-height: 100vh;
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
             background-image: 
                 radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
                 radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
                 radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+            background-size: 100% 600px;
+            background-repeat: no-repeat;
+            min-height: 100vh;
         }
-        
-        .navbar { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255, 255, 255, 0.5); padding: 0.8rem 0; }
-        
-        /* Stat Cards */
-        .stat-card { border: none; border-radius: 20px; color: white; overflow: hidden; position: relative; transition: transform 0.3s; min-height: 140px;}
+
+        /* Navbar Glass */
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 1rem 0;
+        }
+
+        /* Hero Banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            color: white;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        /* Tombol Tambah */
+        .btn-add-new {
+            background: white; color: #4f46e5; border: none; font-weight: 700; padding: 12px 25px; border-radius: 50px;
+            transition: transform 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-decoration: none; display: inline-block;
+        }
+        .btn-add-new:hover { transform: translateY(-3px); background: #f8fafc; color: #4338ca; }
+
+        /* Kartu Statistik */
+        .stat-card { border: none; border-radius: 20px; padding: 25px; color: white; position: relative; overflow: hidden; transition: transform 0.3s; height: 100%; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .stat-card:hover { transform: translateY(-5px); }
-        .bg-gradient-green { background: linear-gradient(135deg, #10b981, #059669); }
-        .bg-gradient-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .card-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .card-orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .card-white { background: white; color: #1f2937; border: 1px solid rgba(0,0,0,0.05); }
+        .stat-icon { font-size: 3rem; opacity: 0.2; position: absolute; right: 20px; bottom: 20px; transform: rotate(-15deg); }
+
+        /* Search & Filter */
+        .search-container { background: white; padding: 8px; border-radius: 15px; display: flex; gap: 10px; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .search-input { border: none; outline: none; padding: 8px; flex-grow: 1; }
+        .filter-select { border: none; background: #f3f4f6; padding: 8px 15px; border-radius: 10px; cursor: pointer; outline: none; font-weight: 600; color: #4f46e5; }
+
+        /* --- ITEM CARDS (DIPERBAIKI UNTUK DETAIL) --- */
+        .item-card { background: white; border-radius: 20px; border: none; transition: all 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; height: 100%; }
+        .item-card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px rgba(0,0,0,0.1); }
         
-        /* Toolbar */
-        .toolbar-container { background: white; border-radius: 20px; padding: 15px 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; }
-        .search-box { background: #f8fafc; border-radius: 50px; padding: 10px 20px; display: flex; align-items: center; border: 1px solid #e2e8f0; width: 300px; }
-        .search-input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.95rem; color: #334155; margin-left: 10px; }
-        .filter-select { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 50px; padding: 10px 20px; color: #334155; cursor: pointer; outline: none; }
+        .card-img-wrapper { position: relative; height: 200px; overflow: hidden; display: block; }
+        .card-img-top { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .item-card:hover .card-img-top { transform: scale(1.05); }
 
-        /* Item Cards */
-        .card-item { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid white; border-radius: 24px; box-shadow: 0 10px 20px rgba(0,0,0,0.03); transition: all 0.3s; overflow: hidden; }
-        .card-item:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08); background: #ffffff; }
-        .img-cover { height: 220px; object-fit: cover; transition: transform 0.5s; opacity: 1; border-bottom: 1px solid #f1f5f9; }
-        .card-item:hover .img-cover { transform: scale(1.05); }
-
-        .badge-soft { padding: 6px 12px; border-radius: 30px; font-weight: 600; font-size: 0.75rem; letter-spacing: 0.5px; }
-        .bg-soft-success { background-color: #d1fae5; color: #065f46; } 
-        .bg-soft-warning { background-color: #fef3c7; color: #92400e; } 
-        .bg-soft-secondary { background-color: #f1f5f9; color: #475569; }
-
-        .card-link { text-decoration: none; color: inherit; }
-        .item-title { color: #1e293b; font-weight: 700; font-size: 1.1rem; margin-bottom: 5px; }
-        .item-price { color: #3b82f6; font-weight: 700; font-size: 1.2rem; }
-        
-        .btn-action-icon { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: 0.2s; cursor: pointer; background-color: #f8fafc; }
-        .btn-action-icon:hover { background-color: #e2e8f0; transform: scale(1.1); }
-        .btn-action-icon.delete:hover { background-color: #fee2e2; color: #ef4444; }
+        .badge-category { position: absolute; top: 15px; left: 15px; background: rgba(255,255,255,0.95); backdrop-filter: blur(4px); color: #4f46e5; font-weight: 700; font-size: 0.75rem; padding: 6px 14px; border-radius: 50px; z-index: 2; }
+        .badge-status { position: absolute; top: 15px; right: 15px; padding: 6px 12px; border-radius: 50px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; z-index: 2; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .status-bought { background: #d1fae5; color: #065f46; }
+        .status-pending { background: #fef3c7; color: #92400e; }
 
         /* Progress Bar */
-        .progress-label { font-size: 0.7rem; color: #64748b; margin-bottom: 3px; display: block; text-align: right; }
-        .progress-container { width: 120px; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #10b981, #3b82f6); border-radius: 10px; }
-        
-        /* Font SweetAlert */
-        .font-poppins { font-family: 'Poppins', sans-serif; }
+        .progress { height: 8px; border-radius: 10px; background: #f3f4f6; margin: 15px 0; }
+        .progress-bar { background: linear-gradient(90deg, #4f46e5, #818cf8); border-radius: 10px; }
+
+        /* Tombol Aksi */
+        .btn-action { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #f1f5f9; color: #64748b; text-decoration: none; transition: 0.2s; }
+        .btn-action:hover { transform: scale(1.1); background: #e2e8f0; color: #334155; }
+        .btn-action.delete:hover { background: #fee2e2; color: #ef4444; }
+
+        /* --- STYLE KHUSUS SWEETALERT (BIAR GAK KAKU) --- */
+        .swal2-popup {
+            border-radius: 20px !important;
+            padding: 20px !important;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1) !important;
+        }
+        .swal2-title {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-size: 1.5rem !important;
+            color: #1e293b !important;
+        }
+        .swal2-html-container {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            color: #64748b !important;
+        }
+        .swal2-actions {
+            gap: 10px;
+        }
+        .swal2-confirm {
+            background-color: #ef4444 !important; /* Merah */
+            border-radius: 50px !important;
+            box-shadow: none !important;
+            font-weight: 600 !important;
+            padding: 10px 25px !important;
+        }
+        .swal2-cancel {
+            background-color: #f1f5f9 !important; /* Abu */
+            color: #64748b !important;
+            border-radius: 50px !important;
+            box-shadow: none !important;
+            font-weight: 600 !important;
+            padding: 10px 25px !important;
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar mb-5 sticky-top">
-    <div class="container d-flex justify-content-between align-items-center">
-        <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="#" style="letter-spacing: 1px;">
-            <i class="fas fa-gift me-2 text-warning"></i> WISHTRACK
-        </a>
-        <div class="d-flex align-items-center gap-4">
-            <div class="d-none d-md-block text-end">
-                <span class="progress-label">Target Tercapai</span>
-                <div class="progress-container"><div class="progress-fill" style="width: 50%"></div></div>
-            </div>
-            <div class="vr d-none d-md-block text-secondary opacity-25" style="height: 30px;"></div>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg fixed-top navbar-custom">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4 text-primary" href="#"><i class="fas fa-gift me-2"></i>WishTrack</a>
+            
             <div class="d-flex align-items-center gap-3">
-                <a href="/user/profile" class="text-decoration-none d-none d-sm-block text-end" title="Lihat Profil">
-                    <small class="d-block text-muted" style="font-size: 0.75rem;">Halo,</small>
-                    <span class="fw-bold text-dark" th:text="${user.name}">User</span>
-                </a>
-                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" width="40" height="40" class="rounded-circle border bg-white p-1" alt="Avatar">
-                <a href="/logout" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold ms-2" style="border-width: 2px;"><i class="fas fa-sign-out-alt"></i></a>
+                <div class="text-end d-none d-sm-block">
+                    <div class="fw-bold text-dark" th:text="${user.name}">User</div>
+                    <small class="text-muted">Budgeter</small>
+                </div>
+                <img src="https://ui-avatars.com/api/?name=User&background=4f46e5&color=fff" class="rounded-circle shadow-sm" width="40">
+                
+                <!-- LOGOUT -->
+                <form th:action="@{/logout}" method="post" class="m-0">
+                     <button class="btn btn-light btn-sm rounded-circle text-danger border" style="width: 40px; height: 40px;" title="Keluar">
+                        <i class="fas fa-sign-out-alt"></i>
+                     </button>
+                </form>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="container pb-5">
-    
-    <!-- HEADER HERO -->
-    <div class="card border-0 rounded-4 p-4 text-white shadow-lg mb-5" style="background: linear-gradient(135deg, #4F8FFF, #2563eb);">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h2 class="fw-bold">Selamat Datang, <span th:text="${user.name}">User</span>! 👋</h2>
-                <p class="mb-0 opacity-75">Kelola barang impianmu, tabung, dan wujudkan sekarang.</p>
+    <div class="container" style="margin-top: 100px; padding-bottom: 50px;">
+        
+        <!-- WELCOME BANNER -->
+        <div class="welcome-banner d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1 class="fw-bold mb-2">Selamat Datang, <span th:text="${user.name}">User</span>! 👋</h1>
+                <p class="mb-0 opacity-75 fs-5">Kelola barang impianmu, tabung, dan wujudkan sekarang.</p>
             </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="/wishlist/add" class="btn btn-light text-primary fw-bold rounded-pill px-4 shadow-sm"><i class="fas fa-plus me-2"></i> Tambah Baru</a>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4 mb-5">
-        <div class="col-lg-4 col-md-6"><div class="card stat-card bg-gradient-green h-100 p-4 d-flex flex-column justify-content-center"><div class="d-flex justify-content-between align-items-center"><div><h1 class="fw-bold mb-0 display-4" th:text="${totalBought}">0</h1><p class="mb-0 text-white-50 fw-medium">Barang Terbeli</p></div><i class="fas fa-check-circle fa-4x text-white opacity-25"></i></div></div></div>
-        <div class="col-lg-4 col-md-6"><div class="card stat-card bg-gradient-orange h-100 p-4 d-flex flex-column justify-content-center"><div class="d-flex justify-content-between align-items-center"><div><h1 class="fw-bold mb-0 display-4" th:text="${totalPending}">0</h1><p class="mb-0 text-white-50 fw-medium">Masih Rencana</p></div><i class="fas fa-hourglass-half fa-4x text-white opacity-25"></i></div></div></div>
-        <div class="col-lg-4 col-md-12"><div class="d-flex flex-column gap-3 h-100 justify-content-center"><div class="card border-0 shadow-sm p-4 d-flex flex-row align-items-center"><div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3"><i class="fas fa-chart-pie text-primary fa-2x"></i></div><div><a href="/wishlist/stats" class="text-decoration-none fw-bold text-dark fs-5 stretched-link">Lihat Statistik</a><small class="text-muted d-block">Analisis Keuangan</small></div></div></div></div>
-    </div>
-
-    <!-- TOOLBAR -->
-    <div class="toolbar-container">
-        <div><h4 class="fw-bold text-dark mb-0">Daftar Keinginan</h4><small class="text-muted">Total <span th:text="${items.size()}">0</span> barang</small></div>
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <div class="search-box"><i class="fas fa-search text-muted"></i><input type="text" id="searchInput" class="search-input" placeholder="Cari barang..." onkeyup="filterItems()"></div>
-            <select id="categoryFilter" class="filter-select" onchange="filterItems()"><option value="all">Semua Kategori</option><option value="Elektronik">Elektronik</option><option value="Fashion">Fashion</option><option value="Hobi">Hobi</option><option value="Kuliah">Kuliah</option></select>
-        </div>
-    </div>
-    
-    <!-- GRID ITEM -->
-    <div class="row g-4" id="itemList">
-        <div class="col-12 text-center py-5" th:if="${items.empty}">
-            <div class="p-5 rounded-4 shadow-sm bg-white">
-                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486747.png" width="100" class="mb-3 opacity-50" alt="Empty">
-                <h5 class="fw-bold text-muted">Belum ada wishlist</h5>
-                <a href="/wishlist/add" class="btn btn-sm btn-outline-primary rounded-pill px-4 mt-2">Tambah Sekarang</a>
+            <div>
+                <a href="/wishlist/add" class="btn btn-add-new"><i class="fas fa-plus me-2"></i> Tambah Baru</a>
             </div>
         </div>
 
-        <div class="col-md-6 col-lg-4 col-xl-3 item-col" th:each="item : ${items}">
-            <div class="card card-item h-100">
-                <a th:href="@{/wishlist/{id}(id=${item.id})}" class="position-relative overflow-hidden d-block">
-                    <img th:if="${item.imageUrl != null}" th:src="@{'/uploads/' + ${item.imageUrl}}" class="card-img-top img-cover">
-                    <img th:unless="${item.imageUrl != null}" src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top img-cover">
-                </a>
-
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="badge badge-soft bg-soft-secondary category-badge" th:text="${item.category}">Umum</span>
-                        <span th:class="'badge badge-soft ' + (${item.status.toString() == 'BOUGHT'} ? 'bg-soft-success' : 'bg-soft-warning')">
-                            <i class="fas" th:classappend="${item.status.toString() == 'BOUGHT'} ? 'fa-check' : 'fa-clock'"></i>
-                            <span th:text="${item.status.toString() == 'BOUGHT' ? 'Tercapai' : 'Pending'}"></span>
-                        </span>
-                    </div>
-
-                    <a th:href="@{/wishlist/{id}(id=${item.id})}" class="card-link">
-                        <h6 class="item-title text-truncate item-name" th:text="${item.name}">Nama Barang</h6>
-                    </a>
-                    
-                    <p class="item-price mb-3">
-                        Rp <span th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') : '0'}">0</span>
-                    </p>
-
-                    <!-- TABUNGAN (AMAN) -->
-                    <div class="mb-3 small bg-light p-2 rounded d-flex justify-content-between align-items-center">
-                        <span class="text-muted"><i class="fas fa-piggy-bank text-success me-1"></i> Tabungan</span>
-                        <span class="fw-bold text-dark">
-                            Rp <span th:text="${item.savedAmount != null ? #numbers.formatDecimal(item.savedAmount, 0, 'COMMA', 0, 'POINT') : '0'}">0</span>
-                        </span>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center border-top pt-3">
-                        <div class="d-flex align-items-center bg-white border rounded-pill px-2 py-1 shadow-sm">
-                             <i class="far fa-calendar-alt text-warning me-1"></i> 
-                             <small class="fw-bold text-secondary" style="font-size: 0.7rem;" th:text="${item.targetDate}">-</small>
+        <!-- STATISTIK RINGKAS -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="stat-card card-green">
+                    <h2 class="fw-bold display-5 mb-0" th:text="${totalBought}">0</h2>
+                    <p class="mb-0 fw-medium">Barang Terbeli</p>
+                    <i class="fas fa-check-circle stat-icon"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card card-orange">
+                    <h2 class="fw-bold display-5 mb-0" th:text="${totalPending}">0</h2>
+                    <p class="mb-0 fw-medium">Masih Rencana</p>
+                    <i class="fas fa-hourglass-half stat-icon"></i>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <a href="/wishlist/stats" class="text-decoration-none">
+                    <div class="stat-card card-white d-flex align-items-center">
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3 text-primary"><i class="fas fa-chart-pie fs-3"></i></div>
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark">Lihat Statistik</h5>
+                            <p class="text-muted small mb-0">Analisis Keuangan</p>
                         </div>
+                        <i class="fas fa-arrow-right ms-auto text-muted opacity-50"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
 
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/wishlist/edit/{id}(id=${item.id})}" class="btn-action-icon text-warning" title="Edit"><i class="fas fa-pen"></i></a>
+        <!-- FILTER & SEARCH -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <h3 class="fw-bold text-white mb-0">Daftar Keinginan</h3>
+            <div class="search-container">
+                <i class="fas fa-search text-muted ps-2"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Cari barang..." onkeyup="filterItems()">
+                <select id="categoryFilter" class="filter-select" onchange="filterItems()">
+                    <option value="all">Semua</option>
+                    <option value="Elektronik">Elektronik</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Hobi">Hobi</option>
+                    <option value="Kuliah">Kuliah</option>
+                    <option value="Rumah">Rumah</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- GRID ITEMS -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" id="itemList">
+            
+            <!-- LOOP BARANG -->
+            <div class="col item-col" th:each="item : ${items}">
+                <div class="card item-card h-100">
+                    
+                    <!-- PERBAIKAN 1: GAMBAR BISA DIKLIK KE DETAIL -->
+                    <a th:href="@{/wishlist/{id}(id=${item.id})}" class="card-img-wrapper">
+                        <img th:src="${item.imageUrl != null ? '/uploads/' + item.imageUrl : 'https://placehold.co/400x300?text=No+Image'}" 
+                             class="card-img-top" alt="Produk">
+                        
+                        <span class="badge-category" th:text="${item.category}">Kat</span>
+                        <span class="badge-status" 
+                              th:classappend="${item.status.name() == 'BOUGHT' ? 'status-bought' : 'status-pending'}"
+                              th:text="${item.status.name() == 'BOUGHT' ? 'Tercapai' : 'Proses'}">
+                        </span>
+                    </a>
+
+                    <div class="card-body p-4 d-flex flex-column">
+                        <!-- PERBAIKAN 2: JUDUL BISA DIKLIK KE DETAIL -->
+                        <a th:href="@{/wishlist/{id}(id=${item.id})}" class="text-decoration-none text-dark">
+                            <h5 class="fw-bold mb-1 item-name text-truncate" th:text="${item.name}">Nama</h5>
+                        </a>
+                        
+                        <h6 class="text-primary fw-bold mb-3" 
+                            th:text="'Rp ' + ${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')}">Price</h6>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted"><i class="fas fa-piggy-bank me-1"></i>Tabungan</span>
+                                <span class="fw-bold" 
+                                      th:text="'Rp ' + ${#numbers.formatDecimal(item.savedAmount, 0, 'COMMA', 0, 'POINT')}">Saved</span>
+                            </div>
                             
-                            <!-- ⚠️ PERBAIKAN UTAMA: TOMBOL HAPUS DENGAN SWEETALERT ⚠️ -->
-                            <!-- Menggunakan data-url agar aman dari error parsing Thymeleaf -->
-                            <a href="javascript:void(0)" 
-                               th:data-url="@{/wishlist/{id}/delete(id=${item.id})}"
-                               onclick="deleteItem(this)"
-                               class="btn-action-icon text-danger delete" 
-                               title="Hapus Barang">
-                               <i class="fas fa-trash-alt"></i>
-                            </a>
+                            <!-- Progress Bar -->
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" 
+                                     th:style="'width: ' + ${(item.price > 0 ? (item.savedAmount * 100.0 / item.price) : 0)} + '%'">
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                <small class="text-muted fw-bold">
+                                    <i class="far fa-calendar-alt me-1 text-warning"></i> 
+                                    <span th:text="${item.targetDate}">Date</span>
+                                </small>
+                                <div class="d-flex gap-2">
+                                    <!-- Edit -->
+                                    <a th:href="@{/wishlist/edit/{id}(id=${item.id})}" class="btn-action" title="Edit">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                    
+                                    <!-- PERBAIKAN 3: SWEETALERT DELETE BUTTON -->
+                                    <a href="javascript:void(0)" 
+                                       th:data-url="@{/wishlist/{id}/delete(id=${item.id})}"
+                                       onclick="deleteItem(this)"
+                                       class="btn-action delete" title="Hapus">
+                                       <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <!-- END LOOP -->
+
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-    // Script Pencarian
-    function filterItems() {
-        let searchText = document.getElementById('searchInput').value.toLowerCase();
-        let selectedCategory = document.getElementById('categoryFilter').value;
-        let items = document.querySelectorAll('.item-col');
-        items.forEach(item => {
-            let itemName = item.querySelector('.item-name').innerText.toLowerCase();
-            let itemCategory = item.querySelector('.category-badge').innerText;
-            let matchesSearch = itemName.includes(searchText);
-            let matchesCategory = (selectedCategory === "all") || (itemCategory === selectedCategory);
-            item.style.display = (matchesSearch && matchesCategory) ? "block" : "none";
-        });
-    }
+    <script>
+        // FUNGSI SEARCH
+        function filterItems() {
+            let searchText = document.getElementById('searchInput').value.toLowerCase();
+            let selectedCategory = document.getElementById('categoryFilter').value;
+            let items = document.querySelectorAll('.item-col');
+            items.forEach(item => {
+                let itemName = item.querySelector('.item-name').innerText.toLowerCase();
+                let itemCategory = item.querySelector('.badge-category').innerText;
+                let matchesSearch = itemName.includes(searchText);
+                let matchesCategory = (selectedCategory === "all") || (itemCategory === selectedCategory);
+                item.style.display = (matchesSearch && matchesCategory) ? "block" : "none";
+            });
+        }
 
-    // SCRIPT POPUP HAPUS CANTIK
-    function deleteItem(element) {
-        // Ambil URL dari atribut data-url
-        const deleteUrl = element.getAttribute('data-url');
+        // FUNGSI POPUP HAPUS CANTIK (GLASSY STYLE)
+        function deleteItem(element) {
+            const deleteUrl = element.getAttribute('data-url');
 
-        Swal.fire({
-            title: 'Yakin mau hapus?',
-            text: "Data yang dihapus tidak bisa dikembalikan!",
-            icon: 'warning',
-            iconColor: '#f59e0b',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444', // Merah
-            cancelButtonColor: '#64748b',  // Abu
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal',
-            reverseButtons: true,
-            focusCancel: true,
-            // Custom Styling agar sesuai tema
-            customClass: {
-                popup: 'rounded-4 shadow-lg border-0',
-                title: 'font-poppins fw-bold text-dark',
-                htmlContainer: 'font-poppins text-secondary',
-                confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold',
-                cancelButton: 'btn btn-light rounded-pill px-4 fw-bold text-muted border'
-            },
-            buttonsStyling: false // Biar bisa pake class bootstrap di atas
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = deleteUrl;
-            }
-        });
-    }
-</script>
+            Swal.fire({
+                title: 'Hapus barang ini?',
+                text: "Yakin? Data yang dihapus tidak bisa kembali!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                focusCancel: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = deleteUrl;
+                }
+            });
+        }
+    </script>
 
 </body>
 </html>

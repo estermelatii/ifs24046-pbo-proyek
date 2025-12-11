@@ -12,52 +12,65 @@ import java.util.UUID;
 @Service
 public class UserService {
 
-    @Autowired 
+    @Autowired
     private UserRepository userRepository;
-    
-    @Autowired 
-    private PasswordEncoder passwordEncoder; 
 
-    // --- 1. FITUR REGISTER (Baru) ---
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    // --- 1. UNTUK AUTH CONTROLLER (Register) ---
     public User registerNewUser(User user) {
-        // Validasi Email Duplikat
-        Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
-        if (existingUser.isPresent()) {
-            throw new RuntimeException("Email sudah digunakan! Silakan gunakan email lain.");
-        }
-
-        // Enkripsi Password
-        String encodedPassword = passwordEncoder.encode(user.getPassword());
-        user.setPassword(encodedPassword);
-        
+        // Enkripsi password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
-    // --- 2. FITUR CARI USER (Untuk Login/Profile) ---
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+    // --- 2. UNTUK UNIT TEST (Biar Test ga error) ---
+    // Kita buat alias, jadi kalau test panggil registerUser, dia lari ke registerNewUser
+    public User registerUser(User user) {
+        return registerNewUser(user);
     }
 
-    // --- 3. FITUR UPDATE USER (Yang tadi hilang) ---
-    // Error di UserController minta method: updateUser(String, User)
+    // --- 3. UNTUK USER CONTROLLER (Update pakai String ID) ---
     public void updateUser(String id, User updatedData) {
-        // Ubah ID dari String ke UUID
-        UUID userId = UUID.fromString(id);
-        
-        // Cari user lama di database
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User tidak ditemukan"));
+        try {
+            UUID uuid = UUID.fromString(id);
+            User existingUser = userRepository.findById(uuid).orElse(null);
+            if (existingUser != null) {
+                updateUser(existingUser, updatedData);
+            }
+        } catch (IllegalArgumentException e) {
+            // Handle jika ID bukan UUID valid
+            System.out.println("Invalid UUID format: " + id);
+        }
+    }
 
-        // Update Data (Nama)
+    // --- 4. LOGIKA UPDATE ASLI ---
+    public void updateUser(User existingUser, User updatedData) {
         existingUser.setName(updatedData.getName());
-
-        // Update Password (Hanya jika user mengisi password baru)
+        existingUser.setEmail(updatedData.getEmail());
+        
+        // Cek jika password diubah
         if (updatedData.getPassword() != null && !updatedData.getPassword().isEmpty()) {
-            String encodedPassword = passwordEncoder.encode(updatedData.getPassword());
-            existingUser.setPassword(encodedPassword);
+            existingUser.setPassword(passwordEncoder.encode(updatedData.getPassword()));
+        }
+        
+        // Cek jika role diubah (opsional)
+        if (updatedData.getRole() != null) {
+            existingUser.setRole(updatedData.getRole());
         }
 
-        // Simpan Perubahan
         userRepository.save(existingUser);
+    }
+
+    // --- 5. FIND BY EMAIL ---
+    public User findByEmail(String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        return user.orElse(null);
+    }
+    
+    // --- 6. FIND BY ID ---
+    public User findById(UUID id) {
+        return userRepository.findById(id).orElse(null);
     }
 }

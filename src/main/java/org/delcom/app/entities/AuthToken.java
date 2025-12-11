@@ -1,38 +1,26 @@
 package org.delcom.app.entities;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
-import jakarta.persistence.*;
-
 @Entity
 @Table(name = "auth_tokens")
-@JsonPropertyOrder({ "id", "token", "userId", "createdAt" })
 public class AuthToken {
+
     @Id
-    @GeneratedValue(generator = "UUID")
-    @Column(name = "id", updatable = false, nullable = false, columnDefinition = "uuid")
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "token", nullable = false, columnDefinition = "TEXT")
     private String token;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private UUID userId;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public AuthToken() {
-    }
-
-    public AuthToken(UUID userId, String token) {
-        this.userId = userId;
-        this.token = token;
-        this.createdAt = LocalDateTime.now();
-    }
+    // --- MANUAL GETTER & SETTER ---
 
     public UUID getId() {
         return id;
@@ -62,9 +50,7 @@ public class AuthToken {
         return createdAt;
     }
 
-    // ======= @PrePersist & @PreUpdate =======
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

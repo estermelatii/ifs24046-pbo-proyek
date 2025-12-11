@@ -1,5 +1,18 @@
 package org.delcom.app.services;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.delcom.app.dto.WishlistForm;
 import org.delcom.app.entities.Status;
 import org.delcom.app.entities.User;
@@ -11,16 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
-
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WishlistServiceTest {
@@ -40,6 +43,7 @@ class WishlistServiceTest {
     void setup() {
         user = new User();
         user.setId(UUID.randomUUID());
+        user.setName("Test User");
     }
 
     @Test
@@ -47,15 +51,26 @@ class WishlistServiceTest {
         WishlistForm form = new WishlistForm();
         form.setName("Test Item");
         form.setPrice(BigDecimal.TEN);
+        form.setCategory("Elektronik");
+        form.setTargetDate(LocalDate.now());
         
-        // Mock perilaku repository
-        when(repository.save(any(WishlistItem.class))).thenAnswer(i -> i.getArguments()[0]);
+        // FIX: Tambahkan casting (WishlistItem) agar tidak error type mismatch
+        when(repository.save(any(WishlistItem.class))).thenAnswer(i -> {
+            WishlistItem item = (WishlistItem) i.getArguments()[0]; 
+            item.setId(UUID.randomUUID()); 
+            return item;
+        });
 
-        // Jalankan
         service.addItem(user, form);
 
-        // Verifikasi repository dipanggil
-        verify(repository, times(1)).save(any());
+        verify(repository, times(1)).save(any(WishlistItem.class));
+    }
+
+    @Test
+    void testGetAllItems() {
+        when(repository.findByUserOrderByCreatedAtDesc(user)).thenReturn(List.of(new WishlistItem(), new WishlistItem()));
+        List<WishlistItem> items = service.getAllItems(user);
+        assertEquals(2, items.size());
     }
 
     @Test
@@ -71,5 +86,52 @@ class WishlistServiceTest {
 
         assertEquals(Status.BOUGHT, item.getStatus());
         verify(repository).save(item);
+    }
+
+    @Test
+    void testUpdateItem() throws IOException {
+        UUID id = UUID.randomUUID();
+        WishlistItem existing = new WishlistItem();
+        existing.setId(id);
+        existing.setName("Old Name");
+        existing.setPrice(BigDecimal.TEN);
+        existing.setSavedAmount(BigDecimal.ZERO);
+        existing.setStatus(Status.PENDING);
+
+        WishlistForm form = new WishlistForm();
+        form.setId(id);
+        form.setName("New Name");
+        form.setPrice(new BigDecimal("100"));
+        form.setSavedAmount(new BigDecimal("100")); 
+
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+
+        service.updateItem(user, form);
+
+        assertEquals("New Name", existing.getName());
+        assertEquals(Status.BOUGHT, existing.getStatus()); 
+        verify(repository).save(existing);
+    }
+
+    @Test
+    void testDeleteItem() {
+        UUID id = UUID.randomUUID();
+        WishlistItem item = new WishlistItem();
+        item.setImageUrl("gambar.jpg");
+
+        when(repository.findById(id)).thenReturn(Optional.of(item));
+
+        service.deleteItem(id);
+
+        verify(fileStorageService).deleteFile("gambar.jpg");
+        verify(repository).deleteById(id);
+    }
+    
+    @Test
+    void testCountMethods() {
+        service.countPending(user);
+        service.countBought(user);
+        verify(repository, times(1)).countByUserAndStatus(user, Status.PENDING);
+        verify(repository, times(1)).countByUserAndStatus(user, Status.BOUGHT);
     }
 }
