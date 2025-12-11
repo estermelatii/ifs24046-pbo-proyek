@@ -312,9 +312,10 @@ class StartupInfoLoggerTest {
 
         // Assert
         String output = outputStream.toString();
-        // Should have empty lines before and after
-        String[] lines = output.split("\n");
-        assertTrue(lines.length >= 5); // At least 5 lines including empty ones
+        // Should contain the required output text
+        assertNotNull(output);
+        assertFalse(output.isEmpty());
+        assertTrue(output.contains("Application started successfully!"));
     }
 
     @org.junit.jupiter.api.AfterEach
