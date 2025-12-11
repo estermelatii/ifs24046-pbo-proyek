@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.3.0</version>
         <relativePath/>
     </parent>
-    
+
     <groupId>org.delcom</groupId>
-    <artifactId>wishlist-app</artifactId>
+    <artifactId>wishlist-tracker</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Wishlist Tracker</name>
     <description>Aplikasi Wishlist Tracker dengan Spring Boot</description>
-    
+
     <properties>
         <java.version>17</java.version>
         <jacoco.version>0.8.11</jacoco.version>
     </properties>
-    
+
     <dependencies>
         <!-- 1. WEB -->
         <dependency>
@@ -33,7 +33,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
-        
+
         <!-- 2. DATABASE -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -49,7 +49,7 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
-        
+
         <!-- 3. SECURITY -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -59,7 +59,7 @@
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
-        
+
         <!-- 4. JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -78,7 +78,7 @@
             <version>0.11.5</version>
             <scope>runtime</scope>
         </dependency>
-        
+
         <!-- 5. UTILITIES -->
         <dependency>
             <groupId>jakarta.validation</groupId>
@@ -91,7 +91,7 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        
+
         <!-- 6. TESTING -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -103,8 +103,8 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        
-        <!-- 7. MOCKITO INLINE (Obat Test) -->
+
+        <!-- 7. MOCKITO INLINE -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-inline</artifactId>
@@ -112,30 +112,26 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
-            <!-- Plugin Spring Boot -->
+            <!-- SPRING BOOT -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            
-            <!-- Plugin JaCoCo (Pembuat Laporan Coverage) -->
+
+            <!-- JACOCO -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <executions>
-                    <!-- Prepare agent for collecting coverage data -->
                     <execution>
-                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
-                    
-                    <!-- Generate coverage report after tests -->
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
@@ -144,41 +140,14 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>org/delcom/app/utils/**</exclude>
+                                <exclude>org/delcom/app/utils/</exclude>
                             </excludes>
-                        </configuration>
-                    </execution>
-                    
-                    <!-- Check coverage thresholds -->
-                    <execution>
-                        <id>jacoco-check</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.00</minimum>
-                                        </limit>
-                                        <limit>
-                                            <counter>BRANCH</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.00</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- PLUGIN SUREFIRE untuk Java 25 & Mockito -->
+            <!-- SUREFIRE -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
