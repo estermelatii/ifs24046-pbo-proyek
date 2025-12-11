@@ -13,7 +13,7 @@
     </parent>
     
     <groupId>org.delcom</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
+    <artifactId>wishlist-app</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>Wishlist Tracker</name>
     <description>Aplikasi Wishlist Tracker dengan Spring Boot</description>
@@ -127,11 +127,15 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <executions>
+                    <!-- Prepare agent for test execution -->
                     <execution>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
+                    
+                    <!-- Generate report after test -->
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
@@ -143,6 +147,29 @@
                                 <!-- Exclude package utils dari report -->
                                 <exclude>org/delcom/app/utils/**</exclude>
                             </excludes>
+                        </configuration>
+                    </execution>
+                    
+                    <!-- Check coverage (optional, bisa di-comment jika tidak perlu) -->
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.00</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
                         </configuration>
                     </execution>
                 </executions>
